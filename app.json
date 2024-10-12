@@ -1,0 +1,58 @@
+{
+  "expo": {
+    "name": "GS_APP",
+    "slug": "GS_APP",
+    "version": "1.0.13",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.gsapp.com.br.GS_APP",
+      "versionCode": 13,
+      "useNextNotificationsApi": true,
+      "googleServicesFile": "./google-services.json",
+      "config":{
+        "googleMaps":{
+          "apiKey":"AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "projectId": "58609154-ed07-43b7-8e35-83b29a048719",
+      "eas": {
+        "projectId":"c3d90517-7fb1-4c4e-87e2-86b8a6e181d7"
+      },
+      "firebase": {
+        "apiKey": "AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco",
+        "authDomain": "gs-app-e02f5.firebaseapp.com",
+        "projectId": "gs-app-e02f5",
+        "storageBucket": "gs-app-e02f5.appspot.com",
+        "messagingSenderId": "182722180520",
+        "appId": "gs-app-e02f5",
+        "measurementId": "5988339001",
+        "serverKey": "AAAAKosXNag:APA91bEtlHVd0rJL53AGqEMAQPx1MtLiW5rBzFV8vEetZG_1xYj2EnjHcSu9sI_qPGDAd_CZGGrTFl0pawrJT0mcUlUOlx0g7DcO3WASv0SUjlvjx00CZEAlUoWqKerT9Ls8agtqDzan"
+      }
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        "@react-native-firebase/app"
+      ]
+    ]
+  }
+}

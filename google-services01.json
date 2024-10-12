@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "182722180520",
+    "project_id": "gs-app-e02f5",
+    "storage_bucket": "gs-app-e02f5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182722180520:android:5984df1a6dd10fce76999d",
+        "android_client_info": {
+          "package_name": "com.gsapp.com.br.GS_APP"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182722180520-vfqbvgk02nf1vslhfriqtsds6hs7pevq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182722180520-vfqbvgk02nf1vslhfriqtsds6hs7pevq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:182722180520:android:33104af9214d32b176999d",
+        "android_client_info": {
+          "package_name": "com.gsapp.gsapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "182722180520-vfqbvgk02nf1vslhfriqtsds6hs7pevq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "182722180520-vfqbvgk02nf1vslhfriqtsds6hs7pevq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1",
+  "apiKey":"AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco"
+}

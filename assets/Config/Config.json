@@ -1,0 +1,12 @@
+{
+    "configuracoes": {
+        "pathPadrao":"https://gsapp.com.br",
+        "pastaProcessos":"https://gsapp.com.br/app/processos_app.php",
+        "cor_base":"#228B22",
+        "cor_fonte_base":"#FFFFFF",
+        "icone_padrao":"",
+        "proprietario":"GS APP",
+        "desenvolvedor":"Guilherme santos",
+        "release":"1091"
+    }
+}
