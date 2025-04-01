@@ -1,0 +1,1 @@
+sistema de gerenciamento de equipe de campo, consiste em gereciar equipes de campo seja online ou offline. ate o momento estamos realizando teste em varios celulares pra verificar a compatibilidade e fluidez do app em diferentes cenarios, uma versao beta ja esta disponivel na GooglePlay, basta pesquisar por GS APP SERVICOS. Agradecemos a quem colaborar com o projeto.
