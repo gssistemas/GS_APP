@@ -16,10 +16,11 @@ import { manipulateAsync, FlipType, SaveFormat } from 'expo-image-manipulator';
 import axios from 'axios';
 import Config from '../../../../assets/Config/Config.json';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import AppLoading from '../../../../Components/Loader/AppLoading';
 const {width,height} = Dimensions.get('window')
 
 export default function Assinatura({route,navigation}:any) {
-    const {listMinhasOs,removerOsListMinhasOs,setLoad,setCapturedImage,capturedImage,arlterarModal,getModalStyle,verificarConexao,IniciarOsOffline,buscarOs,buscarCoordenadas,uploadImages,IniciarOs,salvarVariaveis,usuario,OsIniciada,osInicada,imagensEmbalagem,getModalStyleLabel,imagensMontado,imagensAmbiente,dataLocal,horaLocal,adicionarImagemEmbalagem,adicionarImagemMontagem,removerImagemEmbalagem,apresentaModal,fecharModal} = useContext<any>(AuthLogin);
+    const {listMinhasOs,Config_APP,removerOsListMinhasOs,setLoad,setCapturedImage,capturedImage,arlterarModal,getModalStyle,verificarConexao,IniciarOsOffline,buscarOs,buscarCoordenadas,uploadImages,IniciarOs,salvarVariaveis,usuario,OsIniciada,osInicada,imagensEmbalagem,getModalStyleLabel,imagensMontado,imagensAmbiente,dataLocal,horaLocal,adicionarImagemEmbalagem,adicionarImagemMontagem,removerImagemEmbalagem,apresentaModal,fecharModal} = useContext<any>(AuthLogin);
     const [checked,setIsChecked] = useState(osInicada !== null ? osInicada.status : false);
     const [checkedEmbalagem,setIsCheckedEmbalagem] = useState(false);
     const [checkedMontado,setIsCheckedMontado] = useState(false);
@@ -28,8 +29,57 @@ export default function Assinatura({route,navigation}:any) {
     const canvasRef = useRef(null);
     const currentPath = useRef<SkPath|null>(null)
     const [paths,setPaths] = useState<SkPath[]>([])
-    //console.log('Dados da os=>',osInicada.dadosOs.os);
+    const [asyncLoad,setAsyncLoad] = useState<boolean>(false);
+    const [conf,setConf] = useState<any|null>(null);
+
+    //console.log('Dados da os=>',osInicada.dadosOs.filial[0].id);
     const onTouch = useTouchHandler({
+        onStart: ({ x, y }) => {
+            currentPath.current = Skia.Path.Make();
+            currentPath.current.moveTo(x, y);
+            // Atualiza o canvas para iniciar o desenho
+            setPaths((values) => [...values]);
+        },
+        onActive: ({ x, y }) => {
+            currentPath.current?.lineTo(x, y);
+            // Atualiza o canvas enquanto desliza o dedo
+            setPaths((values) => [...values]);
+        },
+        onEnd: () => {
+            if (currentPath.current) {
+                // Adiciona o caminho completo no array de caminhos
+                setPaths((values) => values.concat(currentPath.current!));
+            }
+            currentPath.current = null;
+        },
+    });
+
+    useEffect(()=>{
+        carregarConfigApp();
+    },[]);
+
+    async function carregarConfigApp(){
+        const jsonValue = await AsyncStorage.getItem('config');
+        const config = jsonValue != null ? JSON.parse(jsonValue) : null;
+
+        if(config ===null){
+            const fetchData = async () => {
+                const response = await Config_APP('config',osInicada.dadosOs.filial[0].id);
+    
+                //console.log('retorno do config=>',response);
+                if(response.code === 0){
+                    setAsyncLoad(true);
+                    setConf(response.retorno);
+                }else{
+                    setAsyncLoad(false);
+                    setConf(null);
+                }
+            }
+    
+            fetchData();
+        }
+    }
+    /*const onTouch = useTouchHandler({
         onStart:({x,y})=>{
             currentPath.current = Skia.Path.Make();
             currentPath.current.moveTo(x,y);
@@ -42,10 +92,24 @@ export default function Assinatura({route,navigation}:any) {
             setPaths(values=> values.concat(currentPath.current!));
             currentPath.current = null;
         }
-    })
+    })*/
 
     //-----------------------------------------------------começo das configurações de assinatura
-    async function enviarImagensFinalizadas(comando:string,imagens:any,assinatura:any){
+    async function enviarImagensFinalizadas(comando:string,imagens:any,assinatura:any,localizacao:any){
+        arlterarModal(
+            'load',
+            'archive-check',
+            'Processando pedido...',
+            ()=>(
+                <View style={[Styles.em_linhaVertical,Styles.w100,getModalStyle('light'),{borderBottomLeftRadius:5,borderBottomRightRadius:5,marginBottom:10}]}>
+                    <ActivityIndicator size={75} color={'blue'}/>
+                    <Text style={[Styles.ft_medium,getModalStyleLabel('light'),{textAlign:'center',marginBottom:25}]}>{'Enviando imagens para o servidor,\n\nAguarde...'}</Text>
+                </View>
+            ),
+            'default',
+            ()=>{null},
+            'Enviando imagens para o servidor,\n\nAguarde...'
+        )
         try {
             let formData = new FormData();
             
@@ -88,8 +152,9 @@ export default function Assinatura({route,navigation}:any) {
                 name: `arquivoAss`,
                 type: `image/jpg`,
             });
-            formData.append('location',JSON.stringify())
-
+            formData.append('location',JSON.stringify(localizacao));
+            formData.append('dadosOs',JSON.stringify(osInicada));
+            formData.append('profissional',usuario.id_login[0].id);
 
             const response = await axios.post(Config.configuracoes.pastaProcessos, formData, {
                 headers: {
@@ -101,7 +166,7 @@ export default function Assinatura({route,navigation}:any) {
                 console.log('retorno do envio da assinatura=>',response.data[0]);
                 return {status:'sucesso',code:0,mensagem:'sucesso'};
             }else{
-                return {status:'erro',code:101,mensagem:'Erro'};
+                return {status:'erro',code:101,mensagem:response.data};
             }
         } catch (error:any) {
             //console.log('Erro no response=>',error)
@@ -139,16 +204,15 @@ export default function Assinatura({route,navigation}:any) {
         
     }
 
-    console.log(osInicada);
-
-    async function iniciar(comando:any,imagens:any,ass:any){
+    async function iniciar(comando:any,imagens:any,ass:any,coords_:any){
         const vrfConn = await verificarConexao();
         if(vrfConn.code ===0){
             //tela:string,DadosOs:any,codigoStatusOs:number,os:number|string,acao?:Function|ReactElement|ReactNode|undefined,comando:string
-            const coords_ = await buscarCoordenadas(null,null,null,null,null,null);
+            /*const coords_ = await buscarCoordenadas(null,null,null,null,null,null);
 
-            if(coords_.code ===0){
-                const retEnvioImg:any = await enviarImagensFinalizadas(comando,imagens,ass);
+            if(coords_.code ===0){*/
+                const retEnvioImg:any = await enviarImagensFinalizadas(comando,imagens,ass,coords_);
+
                 arlterarModal(
                     'load',
                     'archive-check',
@@ -164,6 +228,7 @@ export default function Assinatura({route,navigation}:any) {
                     'Processando dados do usuário,\n\nAguarde...'
                 )
                 if(retEnvioImg.code === 0){
+                    //console.log(retEnvioImg);
                     const retorno = await buscarCoordenadas('home os',osInicada.dadosOs,1200,osInicada.dadosOs.os,'inicio trabalho','inicio trabalho','finalizarOs');
                     if(retorno.code === 0){
                         console.log('retorno iniciar Os=>',retorno);
@@ -171,6 +236,7 @@ export default function Assinatura({route,navigation}:any) {
                         const iniOs = await IniciarOs('finalizarOs',retorno.location.coords.latitude+','+retorno.location.coords.longitude,usuario.id_user,osInicada.dadosOs,1200,osInicada.dadosOs.os,'home os','');
 
                         if(iniOs.code === 0){
+                            console.log('Finalizar os=>',iniOs);
                             const sv = await salvarVariaveis('OsIniciada','OsIniciada','');
 
                             if(sv.code === 0){
@@ -206,11 +272,11 @@ export default function Assinatura({route,navigation}:any) {
                 }else{
                     console.log('Erro ',retEnvioImg.code+' - '+retEnvioImg.mensagem);
                 }
-            }else{
+            /*}else{
                 console.log('Erro 187',coords_.code+' - '+coords_.mensagem);
-            }
+            }*/
         }else{
-            console.log('dados_os=>',osInicada.dadosOs);
+            //console.log('dados_os=>',osInicada.dadosOs);
 
             const retorno = await buscarCoordenadas('home os',osInicada.dadosOs,1200,osInicada.dadosOs.os,'inicio trabalho','inicio trabalho','finalizarOs');
             if(retorno.code === 0){
@@ -228,7 +294,7 @@ export default function Assinatura({route,navigation}:any) {
                             if(OsIni.code ===0){
                                 const removerOsLista = await removerOsListMinhasOs(osInicada.dadosOs.os);
 
-                                if(removerOsLista.code ===0){
+                                if(removerOsLista.code === 0){
                                     //comando:string,param: any|Function|ReactElement|ReactNode|null,param_2:any|Function|ReactElement|ReactNode|null,tela:string
                                     //setTimeout(() => {
                                         navigation.reset({
@@ -290,7 +356,7 @@ export default function Assinatura({route,navigation}:any) {
             ()=>(
                 <View style={[Styles.w100,Styles.em_linhaVertical,{}]}>
                     <ActivityIndicator size={75} color={'blue'} animating={true}/>
-                    <Text style={[Styles.ft_bold,Styles.lbllight,{textAlign:'center'}]}>{'Iniciando processo de finalização\n\nAguarde...'}</Text>
+                    <Text style={[Styles.ft_bold,Styles.lbllight,{textAlign:'center',marginBottom:20}]}>{'Iniciando processo de finalização\n\nAguarde...'}</Text>
                 </View>
             ),
             'default',
@@ -326,12 +392,51 @@ export default function Assinatura({route,navigation}:any) {
         );
         try {
             // Captura a visualização do Canvas como uma imagem
-            const uri = await captureRef(canvasRef, { format: 'png', quality: 1 });
+            const uri = await captureRef(canvasRef, { format: 'png', quality: .4 });
             console.log(uri);
             setAssinatura(uri);
             //tela:string,DadosOs:any,codigoStatusOs:number,os:number,acao?:Function|ReactElement|ReactNode,comando:string
             //await buscarCoordenadas('home os',osInicada.dadosOs,1200,osInicada.dadosOs.os,()=>{navigation.navigate('home os')},'finalizarOs')//uploadImages(osDados:any,dados:any,loc:string,prof:string)
-            iniciar('verificarImagens',uri,null);
+            const localization = await buscarCoordenadas();
+
+            if(localization.code ===0){
+                //console.log('loc=>',localization.location);
+                apresentaModal(
+                    'success',
+                    'map-marker-check',
+                    'Sucesso...',
+                    ()=>(
+                        <View style={[Styles.w100,Styles.em_linhaVertical,{}]}>
+                            <MaterialCommunityIcons name='map-marker-check' size={75} style={[getModalStyleLabel('success')]}/>
+                            <Text style={[Styles.ft_bold,Styles.lbllight,getModalStyleLabel('success'),{marginBottom:20,textAlign:'center'}]}>{'Localização adquirida com sucesso, \n\nContinuando...'}</Text>
+                        </View>
+                    ),
+                    'default',
+                    ()=>{
+                        null
+                    }
+                );
+                setTimeout(() => {
+                    iniciar('verificarImagens',uri,null,localization);
+                }, 1500);
+            }else{
+                apresentaModal(
+                    'error',
+                    'map-marker-off',
+                    'Sucesso...',
+                    ()=>(
+                        <View style={[Styles.w100,Styles.em_linhaVertical,{}]}>
+                            <MaterialCommunityIcons name='map-marker-off' size={75} style={[getModalStyleLabel('danger')]}/>
+                            <Text style={[Styles.ft_bold,Styles.lbllight,getModalStyleLabel('danger'),{marginBottom:20,textAlign:'center'}]}>{'Localização adquirida com sucesso, \n\nContinuando...'}</Text>
+                        </View>
+                    ),
+                    'default',
+                    ()=>{
+                        null
+                    }
+                );
+                return;
+            }
         } catch (error) {
             console.error('Erro ao salvar imagem do Canvas:', error);
         }
@@ -368,40 +473,49 @@ export default function Assinatura({route,navigation}:any) {
     };
 //-----------------------------------------------------fim
     try {
-        return (
-            <View style={[{}]}>
-                <View style={[{position:'absolute',left:'49%',width:'0.5%',right:'49%',height:height - 70,marginTop:'5%',zIndex:1,backgroundColor:'#000'}]}>
+        if(!asyncLoad){
+            return(
+                <AppLoading msgTitle="Trabalhando nisso..." msgLoad="Carregando dados de configuração do app, Aguarde..."/>
+            )
+        }else{
+            return (
+                <View style={[{}]}>
+                    <View style={[{position:'absolute',left:'49%',width:'0.5%',right:'49%',height:height - 70,marginTop:'5%',zIndex:1,backgroundColor:'#000'}]}>
 
-                </View>
-                <Canvas
-                    ref={canvasRef}
-                    onTouch={onTouch}
-                    style={[Styles.w100,{height:height,}]}
-                >
-                    {Children.toArray(
-                        paths.map((path:any)=>(
-                            <Path path={path} style={'stroke'} />
-                        ))
-                    )}
-                    
-                </Canvas>
-                <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.danger,{position:'absolute',marginLeft:width / 2 - 17,bottom:30,transform: [{rotate: '90deg'}]}]}
-                    onPress={()=>{setPaths([])}}
-                >
-                    <Text style={[Styles.ft_regular,Styles.lbldanger]}>Limpar</Text>
-                </TouchableOpacity>
-                <Text style={[Styles.ft_extraBold,Styles.lbldanger,{color:'#000',position:'absolute',marginLeft:width / 2 - 57,bottom: height / 2,transform: [{rotate: '90deg'}]}]}>Assine acima</Text>
-                {
-                    paths !== null && paths.length > 0 &&
-                
-                    <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.success,{position:'absolute',marginLeft:0,bottom:height / 2 - 20,transform: [{rotate: '90deg'}]}]}
-                        onPress={()=>{saveCanvasAsImage()}}
+                    </View>
+                    <Canvas
+                        ref={canvasRef}
+                        onTouch={onTouch}
+                        style={[Styles.w100,{height:height,}]}
                     >
-                        <Text style={[Styles.ft_regular,Styles.lblsuccess]}>Finalizar ordem de servico</Text>
-                    </TouchableOpacity>
-                }
-            </View>
-        ); 
+                        {Children.toArray(
+                            paths.map((path:any)=>(
+                                <Path path={path} style={'stroke'} />
+                            ))
+                        )}
+                        
+                    </Canvas>
+                    {
+                        paths !== null && paths.length > 0 &&
+                        <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.danger,{position:'absolute',marginLeft:width / 2 - 17,bottom:30,transform: [{rotate: '90deg'}]}]}
+                            onPress={()=>{setPaths([])}}
+                        >
+                            <Text style={[Styles.ft_regular,Styles.lbldanger]}>Limpar</Text>
+                        </TouchableOpacity>
+                    }
+                    <Text style={[Styles.ft_extraBold,Styles.lbldanger,{color:'#000',position:'absolute',marginLeft:width / 2 - 57,bottom: height / 2,transform: [{rotate: '90deg'}]}]}>Assine acima</Text>
+                    {
+                        paths !== null && paths.length > 0 &&
+                    
+                        <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.success,{position:'absolute',marginLeft:0,bottom:height / 2 - 20,transform: [{rotate: '90deg'}]}]}
+                            onPress={()=>{saveCanvasAsImage()}}
+                        >
+                            <Text style={[Styles.ft_regular,Styles.lblsuccess]}>Finalizar ordem de servico</Text>
+                        </TouchableOpacity>
+                    }
+                </View>
+            );
+        }
     } catch (error) {
         console.log(error);
     }

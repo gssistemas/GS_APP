@@ -23,6 +23,7 @@ export default function FotoAmbiente({route,navigation}:any) {
         if(usuario !== null){
             //tela:string,DadosOs:any,codigoStatusOs:number,os:number|string,acao?:Function|ReactElement|ReactNode|undefined,comando:string
             const retorno = await buscarCoordenadas('os iniciada',osInicada.dadosOs,1100,osInicada.dadosOs.os,'inicio trabalho','inicio trabalho','iniciarOs');
+            console.log('retorno iniciar Os=>',retorno);
             if(retorno.code === 0){
                 console.log('retorno iniciar Os=>',retorno);
                 //comando:any,localizacao:any,profissional:any,dados:any,codigoStatus:any,os:any,tela:string,acao:Function|ReactElement|ReactNode|undefined|null

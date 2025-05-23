@@ -4,6 +4,8 @@ import { List,Text,SegmentedButtons} from 'react-native-paper';
 import { Styles } from '../../../../assets/Styles/Styles';
 import { AuthLogin } from '../../../../assets/Contexts/AuthLogin';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import Config from '../../../../assets/Config/Config.json';
+import axios from 'axios';
 const {width,height} = Dimensions.get('window');
 
 export default function NotificationsUser() {
@@ -12,15 +14,42 @@ export default function NotificationsUser() {
     const [filteredNotifications, setFilteredNotifications] = useState(notificationsCount);
 
     useEffect(()=>{
-        filterNotifications(value);
+        
         buscarNotificacoes(usuario.id_login[0].id,usuario.id_login[0].id);
         console.log(usuario);
+        filterNotifications(value);
     },[])
 
-    
+    async function marckerDeleteNotification(comando:string,id:string,action:string,de:string){
+        const retorno = await axios({
+            method:'get',
+            url:Config.configuracoes.pastaProcessos,
+            params:{
+                comando:comando,
+                id:id,
+                action:action,
+                para:de,
+            }
+        });
+        console.log(retorno.data);
+        if(retorno.data[0].status === 'OK'){
+            buscarNotificacoes(usuario.id_login[0].id,usuario.id_login[0].id);
+            filterNotifications(value);
+            /*if(retorno.data[0].statusCode === 200) {
+                if(retorno.data[0].count_msg > 0){
+                    setNotificationsCount(retorno.data[0].dados_notify_app);
+                    return {status:'sucesso',code:0,mensagem:retorno.data[0].statusMensagem,count_msg:retorno.data[0].count_msg,retorno:retorno.data[0].dados_notify_app};
+                }else{
+                    setNotificationsCount(retorno.data[0].dados_notify_app);
+                    return {status:'sucesso',code:0,mensagem:'sucesso',count_msg:retorno.data[0].count_msg,retorno:null};
+                }
+            }*/
+        }
+    }
 
     // Função para filtrar notificações com base no tipo (read ou unread)
     const filterNotifications = (type:string) => {
+        setFilteredNotifications(null)
         if (type === 'all') {
             setFilteredNotifications(notificationsCount);
         } else {
@@ -67,7 +96,7 @@ export default function NotificationsUser() {
                         {
 
                             filteredNotifications.map((notify:any,i:number)=>{
-                                
+                                console.log(notify);
                                 return(
                                     <List.Accordion key={i} style={[{borderRadius:10,marginVertical:1,backgroundColor:'#FAFAFA'}]} title={notify.accordionTitle} id={notify.accordionKey} left={()=>{
                                         return(
@@ -77,10 +106,24 @@ export default function NotificationsUser() {
                                     
                                     >
                                         <List.Item title={notify.accordionTitleItem} style={[Styles.w100,{height:'auto',overflow:'visible',paddingBottom:55,backgroundColor:'#FAFAFA',borderRadius:5}]} titleNumberOfLines={5} descriptionMaxFontSizeMultiplier={5} centered={false}/>
-                                        <TouchableOpacity style={[Styles.btn,Styles.em_linhaHorizontal,Styles.w100,Styles.primary,{marginTop:-50,}]}>
-                                            <MaterialCommunityIcons name='email-open' size={25} color={'#000'} style={[Styles.mr_5,Styles.lblprimary]}/>
-                                            <Text style={[Styles.ft_regular,Styles.lblprimary]}>Marcar como lida</Text>
-                                        </TouchableOpacity>
+                                        <View style={[Styles.w100,Styles.em_linhaHorizontal,{marginLeft:-20,marginBottom:10}]}>
+                                            <TouchableOpacity style={[Styles.btn,Styles.em_linhaHorizontal,Styles.w30,Styles.danger,{marginTop:-50,marginHorizontal:0}]}
+                                                onPress={()=>{
+                                                    marckerDeleteNotification('excluir',notify.accordionKey,'',usuario.id_login[0].id);
+                                                }}
+                                            >
+                                                <MaterialCommunityIcons name='delete' size={25} color={'#000'} style={[Styles.mr_5,Styles.lbldanger]}/>
+                                                <Text style={[Styles.ft_regular,Styles.lbldanger]}>Excluir</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity style={[Styles.btn,Styles.em_linhaHorizontal,Styles.w65,Styles.primary,{marginTop:-50,marginHorizontal:0}]}
+                                                onPress={()=>{
+                                                    marckerDeleteNotification('marcarlido',notify.accordionKey,'',usuario.id_login[0].id);
+                                                }}
+                                            >
+                                                <MaterialCommunityIcons name='email-open' size={25} color={'#000'} style={[Styles.mr_5,Styles.lblprimary]}/>
+                                                <Text style={[Styles.ft_regular,Styles.lblprimary]}>Marcar como lida</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </List.Accordion>
                                 )
                             })

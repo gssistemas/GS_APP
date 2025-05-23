@@ -67,12 +67,12 @@ export default function HomeOs() {
                     }}
                 />
                 <Tab.Screen
-                    name='O.s. disp.'
+                    name='rotas'
                     component={OsDisponiveis}
                     options={{
                         tabBarBadge:()=>{
                             return(
-                                <View style={[{backgroundColor:countOo === 0 ? 'red':'blue',borderRadius:50,borderBottomLeftRadius:0,marginTop:6,marginRight:8,paddingHorizontal:5,alignItems:'center',justifyContent:'center'}]}>
+                                <View style={[{backgroundColor:listOsDisponiveis !== null && listOsDisponiveis.length > 0 ? 'green':'red',borderRadius:50,borderBottomLeftRadius:0,marginTop:6,marginRight:8,paddingHorizontal:5,alignItems:'center',justifyContent:'center'}]}>
                                     <Text style={{color:'#FFFFFF'}}>{listOsDisponiveis !== null || listOsDisponiveis ? listOsDisponiveis.length : 0}</Text>
                                 </View>
                             )

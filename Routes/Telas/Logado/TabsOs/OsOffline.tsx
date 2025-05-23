@@ -14,8 +14,7 @@ const {width,height} = Dimensions.get('window');
 export default function OsOffline() {
     const navigation = useNavigation();
     const {theme} = useTheme()
-    const {usuario,AlimentarApp,setLoad,arlterarModal,buscarNotificacoes,enviarOsOfflines,removerOsOffline,isConnectedNetwork,setListOsOffline,verificarConexao,listMinhasOs,listOsDisponiveis,listOsOffline,isModalVisible,getModalStyleLabelAlert,setModalVisible,modalVisible,apresentaModal,fecharModal,getModalStyle,getModalStyleLabel,buscarOs,dataInicial,dataFinal,idPrceiro,statusOs,nomeCliente,nf,ordemServico,osInicada,setNomeCliente} = useContext<any>(AuthLogin);
-    //console.log('lista de os_offoline=>',listOsOffline)
+    const {usuario,AlimentarApp,setLoad,arlterarModal,getModalStyleBorder,buscarNotificacoes,enviarOsOfflines,removerOsOffline,isConnectedNetwork,setListOsOffline,verificarConexao,listMinhasOs,listOsDisponiveis,listOsOffline,isModalVisible,getModalStyleLabelAlert,setModalVisible,modalVisible,apresentaModal,fecharModal,getModalStyle,getModalStyleLabel,buscarOs,dataInicial,dataFinal,idPrceiro,statusOs,nomeCliente,nf,ordemServico,osInicada,setNomeCliente} = useContext<any>(AuthLogin);
     async function abrirWhatsapp(linkWhatsapp:any){
       let Url = linkWhatsapp;
   
@@ -32,10 +31,9 @@ export default function OsOffline() {
 
     const onRefresh = async () => {
       const vrfConn = await verificarConexao();
-      console.log('Verificação de conexão=>',vrfConn)
+      //('Verificação de conexão=>',vrfConn)
       if(vrfConn.code === 0/*vrfConn.code ===  0*/){
         const os = await buscarOs('buscarOs',nf+'|'+dataInicial === undefined ? null : dataInicial+'|'+dataFinal === undefined ? null : dataFinal+'|'+nomeCliente === undefined ? null : nomeCliente+'|'+ordemServico === undefined ? null : ordemServico+'|'+usuario.id_login[0].id);
-        //console.log('34 da tab minhas OS',os)
         if(os.code === 0){
           fecharModal('');
           setModalVisible(false);
@@ -88,8 +86,6 @@ export default function OsOffline() {
         const aguardarEnvio = await enviarOsOfflines();
 
         if(aguardarEnvio.code === 0){
-          
-          console.log('Erro=> 91-',aguardarEnvio);
           arlterarModal(
             'success',
             'archive-check',
@@ -105,7 +101,6 @@ export default function OsOffline() {
             aguardarEnvio.retorno
           )
         }else{
-          console.log('Erro=> 107-',aguardarEnvio);
           arlterarModal(
             'error',
             'close-circle',
@@ -218,6 +213,66 @@ export default function OsOffline() {
       }
     }
 
+    function OsStatus(status:number){
+      switch (status) {
+          case 500:
+              return(
+                <View style={[getModalStyle('danger'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 550:
+              return(
+                <View style={[getModalStyle('dark'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 2100:
+              return(
+                <View style={[getModalStyle('warning'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 600:
+              return(
+                <View style={[getModalStyle('info'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 800:
+              return(
+                <View style={[getModalStyle('info'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 900:
+              return(
+                <View style={[getModalStyle('primary'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 1100:
+              return(
+                <View style={[getModalStyle('primary'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 1200:
+              return(
+                <View style={[getModalStyle('success'),getModalStyleBorder('success'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:-5}]}/>
+              );
+            break;
+          case 1000:
+              return(
+                <View style={[getModalStyle('primary'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 1500:
+              return(
+                <View style={[getModalStyle('success'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+            break;
+          case 2000:
+              return(
+                <View style={[getModalStyle('warning'),getModalStyleBorder('danger'),{borderRadius:5,borderTopRightRadius:0,borderBottomRightRadius:0,width:5,height:'100%',marginRight:5,marginLeft:0-5}]}/>
+              );
+          break;
+      }
+    }
+
     return(
       <ThemedView style={[{height:height - 100,width:'100%',paddingHorizontal:5,paddingVertical:10,alignItems:'center',justifyContent:'center',backgroundColor:theme.backgroundColor.background}]}>
         
@@ -311,12 +366,12 @@ export default function OsOffline() {
             <ScrollView style={[{width:'100%'}]} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={modalVisible} onRefresh={onRefresh}/>}>
               {
                 listOsOffline.map((mOs:any,i:number)=>{
-                  //console.log(mOs.imagens_caixa[0][0])
                   
                   //if(existe !== -1){
                     return(
-                      <ThemedView key={i} style={[{width:'100%',borderRadius:5,padding:10,elevation:2,marginVertical:10,height:'auto',backgroundColor:'#FAFAFA'}]}>
-                            <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.danger,{paddingHorizontal:2,paddingVertical:2,marginHorizontal:0,position:'absolute',zIndex:999,right:0,top:-10}]}
+                      <ThemedView key={i} style={[{width:'95%',borderRadius:5,padding:0,elevation:2,marginVertical:5,height:'auto',backgroundColor:'#FAFAFA',marginHorizontal:'1.5%',borderTopRightRadius:20,borderBottomRightRadius:20}]}>
+                        <View style={[Styles.w100,Styles.em_linhaHorizontal,{marginRight:2.5}]}>
+                          <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.danger,{paddingHorizontal:2,paddingVertical:2,marginHorizontal:0,position:'absolute',zIndex:999,right:0,top:-10}]}
                               onPress={()=>{
                                 apresentaModal(
                                   'dialog',
@@ -346,7 +401,6 @@ export default function OsOffline() {
                                               <TouchableOpacity style={[Styles.btn,Styles.success,Styles.em_linhaHorizontal,Styles.w33,Styles.btnDialog,Styles.btnDialogRight,{}]}
                                                   onPress={()=>{
                                                       removerOs(mOs.os);
-                                                      //console.log(route.params.dadosOs)//
                                                       //iniciar()
                                                   }}
                                               >
@@ -359,90 +413,88 @@ export default function OsOffline() {
                               }}
                             >
                               <MaterialCommunityIcons name='close' size={15} style={[Styles.lbldanger]}/>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[{width:'100%',alignItems:'stretch',justifyContent:'center'}]} onPress={()=>{navigation.navigate('info os',{dadosOs:mOs,voltar:true})}}>
-                              <View style={[{flexDirection:'column',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
-                                <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',paddingVertical:5,paddingHorizontal:10,borderRadius:5,backgroundColor:theme.backgroundColor.background}]}>
-                                  <MaterialCommunityIcons name='store' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                  <ThemedText type='default' style={[{fontSize:width * 0.05}]}>{mOs.filial[0].codigo_loja+' - '+mOs.filial[0].nome}</ThemedText>
-                                </ThemedView>
-                              </View>
-                              <View style={[{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
-                                <ThemedView style={[{width:'48%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
-                                  <MaterialCommunityIcons name='archive' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                  <ThemedText type='default'>O.S.:{mOs.os}</ThemedText>
-                                </ThemedView>
-                                <ThemedView style={[{width:'48%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:4}]}>
-                                  <MaterialCommunityIcons name='file-document' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                  <ThemedText type='default'>NF:{mOs.nota_fiscal}</ThemedText>
-                                </ThemedView>
-                              </View>
-                              <View style={[{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
-                                <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
-                                  <MaterialCommunityIcons name='account' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                  <ThemedText type='default' style={[{fontSize:width * 0.05}]}>{mOs.title}</ThemedText>
-                                </ThemedView>
-                              </View>
-                              <View style={[{flexDirection:'column',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
-                                <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
+                          </TouchableOpacity>
+                          {
+                            OsStatus(mOs.status)
+                          }
+                          <TouchableOpacity style={[{width:'96%',alignItems:'stretch',justifyContent:'center',borderTopRightRadius:20}]} onPress={()=>{navigation.navigate('info os',{dadosOs:mOs,voltar:true})}}>
+                            <View style={[{flexDirection:'column',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
+                                  <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',paddingVertical:5,paddingHorizontal:10,borderRadius:5,backgroundColor:theme.backgroundColor.background}]}>
+                                    <MaterialCommunityIcons name='store' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                    <ThemedText type='default' style={[{fontSize:width * 0.05}]}>{mOs.filial[0].codigo_loja !== undefined ? mOs.filial[0].codigo_loja+' - '+mOs.filial[0].nome : ''+' - '+mOs.filial[0].nome}</ThemedText>
+                                  </ThemedView>
+                            </View>
+                            <View style={[{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
+                                  <ThemedView style={[{width:'48%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
+                                    <MaterialCommunityIcons name='archive' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                    <ThemedText type='default'>O.S.:{mOs.os}</ThemedText>
+                                  </ThemedView>
+                                  <ThemedView style={[{width:'48%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:4}]}>
+                                    <MaterialCommunityIcons name='file-document' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                    <ThemedText type='default'>NF:{mOs.nota_fiscal}</ThemedText>
+                                  </ThemedView>
+                            </View>
+                            <View style={[{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
+                                  <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
+                                    <MaterialCommunityIcons name='account' size={25} color={'#000000'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                    <ThemedText type='default' style={[{fontSize:width * 0.05}]}>{mOs.title}</ThemedText>
+                                  </ThemedView>
+                            </View>
+                            <View style={[{flexDirection:'column',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
+                                  <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
+                                    {
+                                      mOs.endereco === null || mOs.endereco.length ===0 ? 
+                                      <>
+                                        <MaterialCommunityIcons name='map-marker-distance' size={25} color={'red'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                        <ThemedText type='default' style={[{color:'red'}]}>Endereço: {'Favor verificar junto a filial!'}</ThemedText>
+                                      </>
+                                      :
+                                      <>
+                                        <MaterialCommunityIcons name='map-marker-distance' size={25} color={'blue'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                        <ThemedText type='default' style={[{color:theme.labels.text,maxWidth:'100%'}]} maxFontSizeMultiplier={2}>{mOs.endereco[0].rua+', N° '+mOs.endereco[0].n+'\n'+(mOs.endereco[0].bairro !== 'null' && mOs.endereco[0].bairro !== '' ? mOs.endereco[0].bairro : 'Não informado')+','+mOs.endereco[0].cidade+'-'+mOs.endereco[0].uf}</ThemedText>
+                                      </>
+                                    }
+                                  </ThemedView>
+                            </View>
+                            <View style={[{flexDirection:'column',alignItems:'center',justifyContent:'space-between',marginVertical:2.5,borderBottomRightRadius:20}]}>
+                                  <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5,borderBottomRightRadius:20}]}>
                                   {
-                                    mOs.endereco === null || mOs.endereco.length ===0 ? 
-                                    <>
-                                      <MaterialCommunityIcons name='map-marker-distance' size={25} color={'red'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                      <ThemedText type='default' style={[{color:'red'}]}>Endereço: {'Favor verificar junto a filial!'}</ThemedText>
-                                    </>
-                                    :
-                                    <>
-                                      <MaterialCommunityIcons name='map-marker-distance' size={25} color={'blue'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                      <ThemedText type='default' style={[{color:theme.labels.text,maxWidth:'100%'}]} maxFontSizeMultiplier={2}>{mOs.endereco[0].rua+', N° '+mOs.endereco[0].n+'\n'+(mOs.endereco[0].bairro !== 'null' && mOs.endereco[0].bairro !== '' ? mOs.endereco[0].bairro : 'Não informado')+','+mOs.endereco[0].cidade+'-'+mOs.endereco[0].uf}</ThemedText>
-                                    </>
-                                  }
-                                </ThemedView>
-                              </View>
-                              <View style={[{flexDirection:'column',alignItems:'center',justifyContent:'space-between',marginVertical:2.5}]}>
-                                <ThemedView style={[{width:'100%',flexDirection:'row',alignItems:'center',justifyContent:'flex-start',backgroundColor:theme.backgroundColor.background,paddingVertical:5,paddingHorizontal:10,borderRadius:5}]}>
-                                {
-                                    mOs.endereco === null || mOs.endereco.length ===0 ? 
-                                    <View style={[Styles.em_linhaHorizontal,{justifyContent:'space-between'}]}>
-                                      <MaterialCommunityIcons name='tune-variant' size={25} color={'red'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                      mOs.endereco === null || mOs.endereco.length ===0 ? 
                                       <View style={[Styles.em_linhaHorizontal,{justifyContent:'space-between'}]}>
-                                        <ThemedText type='default' style={[{color:'red'}]}>{'Contato Inválido!'}</ThemedText>
+                                        <MaterialCommunityIcons name='tune-variant' size={25} color={'red'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                        <View style={[Styles.em_linhaHorizontal,{justifyContent:'space-between'}]}>
+                                          <ThemedText type='default' style={[{color:'red'}]}>{'Contato Inválido!'}</ThemedText>
+                                        </View>
                                       </View>
-                                    </View>
-                                    :
-                                    <View style={[Styles.em_linhaHorizontal,Styles.w100,{justifyContent:'space-between'}]}>
-                                      <MaterialCommunityIcons name='tune-variant' size={25} color={'blue'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
-                                      <View style={[Styles.em_linhaHorizontal,{justifyContent:'space-between'}]}>
-                                        <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.light,Styles.w40,{marginHorizontal:0,marginVertical:0,paddingVertical:0,borderRadius:50,paddingLeft:0,justifyContent:'flex-start'}]}
-                                          onPress={()=>{
-                                              console.log('OsIniciada=>',mOs);
-                                              //console.log('agendamento Status=>',)
-                                              //status(agendamento_m[0].status)
-                                              //osInicada.dadosOs.endereco[0].contato === null && Alert.alert('ATENÇÃO!!!','Não encontramos um número de telefone para este cliente, Edite os dados do endereço do mesmo e tente novamente');
-                                              mOs.endereco[0].contato !== null && mOs.endereco[0].contato !== '' && abrirWhatsapp((Platform.OS === 'android') ? 'tel:'+mOs.endereco[0].contato : Alert.alert('Erro','Erro'));//'whatsapp://send?text=Olá *'+route.params.params.cliente+'*, Notificamos que sua montagem foi agendada.\n\nVocê pode acompanhar o status da mesma nesse endereço: https://gsapp.net.br/gsmontagens/?params='+route.params.params.nota+'\nSegue dados do agendamento:\n\n*1. '+agendamento_m[0].descricao+'*\n*2. Horário de inicio:* '+agendamento_m[0].horario_inicio+'\n*3. Horário término:* '+agendamento_m[0].horario_fim+'\n*4. Status:* '+statusMontagem+'&phone=+55'+end.contato);
-                                          }}
-                                        >
-                                          <MaterialCommunityIcons name='phone' size={25} style={[Styles.mr_5,getModalStyle(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined ? 'warning' : 'info'),getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info'),{paddingHorizontal:5,paddingVertical:5,elevation:5,borderRadius:50}]}/>
-                                          <ThemedText type='defaultSemiBold' style={[getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info')]}>{'Chamar'}</ThemedText>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.light,Styles.w50,{marginHorizontal:0,marginVertical:0,paddingVertical:0,borderRadius:50,paddingLeft:0,justifyContent:'flex-start'}]}
+                                      :
+                                      <View style={[Styles.em_linhaHorizontal,Styles.w100,{justifyContent:'space-between'}]}>
+                                        <MaterialCommunityIcons name='tune-variant' size={25} color={'blue'} style={[{backgroundColor:'#CACACA',marginLeft:-10,borderRadius:5,borderTopLeftRadius:5,borderBottomLeftRadius:5,paddingVertical:10,marginVertical:-5,paddingHorizontal:10,marginRight:5}]}/>
+                                        <View style={[Styles.em_linhaHorizontal,{justifyContent:'space-between'}]}>
+                                          <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.light,Styles.w40,{marginHorizontal:0,marginVertical:0,paddingVertical:0,borderRadius:50,paddingLeft:0,justifyContent:'flex-start'}]}
                                             onPress={()=>{
-                                                console.log('OsIniciada=>',mOs);
-                                                //console.log('agendamento Status=>',)
-                                                //status(agendamento_m[0].status)
                                                 //osInicada.dadosOs.endereco[0].contato === null && Alert.alert('ATENÇÃO!!!','Não encontramos um número de telefone para este cliente, Edite os dados do endereço do mesmo e tente novamente');
-                                                mOs.endereco[0].contato !== null && mOs.endereco[0].contato !== '' && abrirWhatsapp((Platform.OS === 'android') ? 'whatsapp://send?text='+mOs.endereco[0].contato+'?body=Olá '+mOs.title+', Notificamos que sua montagem foi agendada.\n\nVocê pode acompanhar o status da mesma nesse endereço: https://gsapp.com.br/gsmontagens/?params=psqmtg,'+mOs.os+'&phone=+55'+mOs.endereco[0].contato : Alert.alert('Erro','Erro'));//'whatsapp://send?text=Olá *'+route.params.params.cliente+'*, Notificamos que sua montagem foi agendada.\n\nVocê pode acompanhar o status da mesma nesse endereço: https://gsapp.net.br/gsmontagens/?params='+route.params.params.nota+'\nSegue dados do agendamento:\n\n*1. '+agendamento_m[0].descricao+'*\n*2. Horário de inicio:* '+agendamento_m[0].horario_inicio+'\n*3. Horário término:* '+agendamento_m[0].horario_fim+'\n*4. Status:* '+statusMontagem+'&phone=+55'+end.contato);
+                                                mOs.endereco[0].contato !== null && mOs.endereco[0].contato !== '' && abrirWhatsapp((Platform.OS === 'android') ? 'tel:'+mOs.endereco[0].contato : Alert.alert('Erro','Erro'));//'whatsapp://send?text=Olá *'+route.params.params.cliente+'*, Notificamos que sua montagem foi agendada.\n\nVocê pode acompanhar o status da mesma nesse endereço: https://gsapp.net.br/gsmontagens/?params='+route.params.params.nota+'\nSegue dados do agendamento:\n\n*1. '+agendamento_m[0].descricao+'*\n*2. Horário de inicio:* '+agendamento_m[0].horario_inicio+'\n*3. Horário término:* '+agendamento_m[0].horario_fim+'\n*4. Status:* '+statusMontagem+'&phone=+55'+end.contato);
                                             }}
-                                        >
-                                            <MaterialCommunityIcons name='whatsapp' size={25} style={[Styles.mr_5,getModalStyle(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined ? 'warning' : 'info'),getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info'),{paddingHorizontal:5,paddingVertical:5,elevation:5,borderRadius:50}]}/>
-                                            <ThemedText type='defaultSemiBold' style={[getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info')]}>{'WhatsApp'}</ThemedText>
-                                        </TouchableOpacity>
+                                          >
+                                            <MaterialCommunityIcons name='phone' size={25} style={[Styles.mr_5,getModalStyle(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined ? 'warning' : 'info'),getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info'),{paddingHorizontal:5,paddingVertical:5,elevation:5,borderRadius:50}]}/>
+                                            <ThemedText type='defaultSemiBold' style={[getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info')]}>{'Chamar'}</ThemedText>
+                                          </TouchableOpacity>
+                                          <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.light,Styles.w50,{marginHorizontal:0,marginVertical:0,paddingVertical:0,borderRadius:50,paddingLeft:0,justifyContent:'flex-start'}]}
+                                              onPress={()=>{
+                                                  //osInicada.dadosOs.endereco[0].contato === null && Alert.alert('ATENÇÃO!!!','Não encontramos um número de telefone para este cliente, Edite os dados do endereço do mesmo e tente novamente');
+                                                  mOs.endereco[0].contato !== null && mOs.endereco[0].contato !== '' && abrirWhatsapp((Platform.OS === 'android') ? 'whatsapp://send?text='+mOs.endereco[0].contato+'?body=Olá '+mOs.title+', Notificamos que sua montagem foi agendada.\n\nVocê pode acompanhar o status da mesma nesse endereço: https://gsapp.com.br/gsmontagens/?params=psqmtg,'+mOs.os+'&phone=+55'+mOs.endereco[0].contato : Alert.alert('Erro','Erro'));//'whatsapp://send?text=Olá *'+route.params.params.cliente+'*, Notificamos que sua montagem foi agendada.\n\nVocê pode acompanhar o status da mesma nesse endereço: https://gsapp.net.br/gsmontagens/?params='+route.params.params.nota+'\nSegue dados do agendamento:\n\n*1. '+agendamento_m[0].descricao+'*\n*2. Horário de inicio:* '+agendamento_m[0].horario_inicio+'\n*3. Horário término:* '+agendamento_m[0].horario_fim+'\n*4. Status:* '+statusMontagem+'&phone=+55'+end.contato);
+                                              }}
+                                          >
+                                              <MaterialCommunityIcons name='whatsapp' size={25} style={[Styles.mr_5,getModalStyle(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined ? 'warning' : 'info'),getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info'),{paddingHorizontal:5,paddingVertical:5,elevation:5,borderRadius:50}]}/>
+                                              <ThemedText type='defaultSemiBold' style={[getModalStyleLabel(mOs.endereco[0].endereco === null && mOs.endereco[0].endereco !== undefined && mOs.endereco[0].endereco.length === 0 ? 'warning' : 'info')]}>{'WhatsApp'}</ThemedText>
+                                          </TouchableOpacity>
+                                        </View>
                                       </View>
-                                    </View>
-                                  }
-                                </ThemedView>
-                              </View>
-                            </TouchableOpacity>
+                                    }
+                                  </ThemedView>
+                            </View>
+                          </TouchableOpacity>
+                        </View>
                       </ThemedView>
                     )
                   //}

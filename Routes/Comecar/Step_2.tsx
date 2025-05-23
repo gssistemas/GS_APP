@@ -6,15 +6,87 @@ import { useTheme } from '../../assets/Styles/ThemeContext';
 import {AuthLogin} from '../../assets/Contexts/AuthLogin';
 import { ExternalLink } from '../Components/ExternalLink';
 import { ThemedText } from '../Components/ThemedText';
+import Config from '../../assets/Config/Config.json';
+import axios from 'axios';
 
 export default function Step_2({navigation}:any) {
     const { theme } = useTheme();
-    const {uniqueId,gerarIdUnico,apresentaModal,load,setLoad,modalVisible,setModalVisible,iconeModal,setIconeModal,titleModal,setTitleModal,conteudoModal,setConteudoModal,actionsModal,setActionsModal} = useContext<any>(AuthLogin);
+    const {uniqueId,gerarIdUnico,apresentaModal,arlterarModal,load,setLoad,modalVisible,setModalVisible,iconeModal,getModalStyle,getModalStyleLabel,getModalStyleLabelAlert,setIconeModal,titleModal,setTitleModal,conteudoModal,setConteudoModal,actionsModal,setActionsModal} = useContext<any>(AuthLogin);
     console.log(uniqueId,load)
 
     const openWebsite = (href:string) => {
       Linking.openURL(href).catch(err => console.error("Couldn't load page", err));
     };
+
+    async function verificarRegistro(id_do_app:string){
+      apresentaModal('load','close','',()=>(<View style={[Styles.em_linhaVertical,{marginBottom:20}]}><ActivityIndicator size={75}/><Text style={[Styles.ft_regular,{textAlign:'center',marginBottom:20}]}>{'Verificando registro do aplicativo\n\nAguarde...'}</Text></View>),'light',()=>(null));
+
+      const response = await axios({
+        method:'get',
+        url:Config.configuracoes.pastaProcessos,
+        params:{
+          comando:'verificarRegistro',
+          id_app:id_do_app,
+        },
+      });
+      console.log(response)
+      if(response.data[0].status === 'OK'){
+        if(response.data[0].codeMensagem === 1){
+          apresentaModal(
+              'error',
+              'shield-remove',
+              'Erro',
+              ()=>(<View style={[Styles.em_linhaVertical]}><MaterialCommunityIcons name='shield-remove' size={75} style={[getModalStyleLabel('danger')]}/><Text style={[Styles.ft_regular,getModalStyleLabel('danger'),{textAlign:'center',marginBottom:20,}]}>{response.data[0].statusMensagem+'\n\nSeu ID único:'+id_do_app+'\n\nDeseja prosseguir com o cadastro do app?'}</Text></View>),
+              'light',
+              ()=>(
+                  <>
+                    <TouchableOpacity 
+                        onPress={()=>{setModalVisible(false)}} 
+                        style={[Styles.w50,Styles.danger,{marginHorizontal:0,alignItems:'center',justifyContent:'center',paddingVertical:15,borderBottomLeftRadius:5}]}
+                    >
+                        <Text style={[Styles.ft_regular,Styles.lbldanger,{}]}>Não</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        onPress={()=>{setModalVisible(false),navigation.navigate('register app',{id_app:id_do_app});}} 
+                        style={[Styles.w50,Styles.success,{marginHorizontal:0,alignItems:'center',justifyContent:'center',paddingVertical:15,borderBottomRightRadius:5}]}
+                    >
+                        <Text style={[Styles.ft_regular,Styles.lblsuccess,{}]}>Sim</Text>
+                    </TouchableOpacity>
+                  </>
+              ),
+              response.data[0].statusMensagem+'\n\nSeu ID único:'+id_do_app+'\n\nDeseja prosseguir com o cadastro do app?'
+          )
+          //setLoad(false);
+        }else{
+          apresentaModal(
+            'success',
+            'shield-check',
+            'Sucesso',
+            ()=>(<View style={[Styles.em_linhaVertical]}><MaterialCommunityIcons name='shield-remove' size={75} style={[getModalStyleLabel('success')]}/><Text style={[Styles.ft_regular,getModalStyleLabel('success'),{textAlign:'center',marginBottom:20,}]}>{response.data[0].statusMensagem+'\n\nDeseja prosseguir com o app?'}</Text></View>),
+            'light',
+            ()=>(
+                <>
+                  <TouchableOpacity 
+                      onPress={()=>{setModalVisible(false)}} 
+                      style={[Styles.w50,Styles.danger,{marginHorizontal:0,alignItems:'center',justifyContent:'center',paddingVertical:15,borderBottomLeftRadius:5}]}
+                  >
+                      <Text style={[Styles.ft_regular,Styles.lbldanger,{}]}>Não</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                      onPress={()=>{setModalVisible(false),navigation.navigate('requisicao');}} 
+                      style={[Styles.w50,Styles.success,{marginHorizontal:0,alignItems:'center',justifyContent:'center',paddingVertical:15,borderBottomRightRadius:5}]}
+                  >
+                      <Text style={[Styles.ft_regular,Styles.lblsuccess,{}]}>Sim</Text>
+                  </TouchableOpacity>
+                </>
+            ),
+            response.data[0].statusMensagem+'\n\nDeseja prosseguir com o cadastro do app?'
+        )
+        }
+        //
+      }
+      
+    }
 
     try {
       return (
@@ -28,7 +100,7 @@ export default function Step_2({navigation}:any) {
                 load === true && 
                 <TouchableOpacity style={[Styles.w95,Styles.btn,Styles.em_linhaHorizontal,Styles.primary,{}]}
                   onPress={()=>{
-                    apresentaModal('load','close','',()=>(<View style={[Styles.em_linhaVertical]}><ActivityIndicator size={75}/><Text style={[Styles.ft_regular,{textAlign:'center',marginBottom:20}]}>{'Gerando id único do aplicativo\n\nAguarde...'}</Text></View>),'light',()=>(null))
+                    apresentaModal('load','close','',()=>(<View style={[Styles.em_linhaVertical,{marginBottom:20}]}><ActivityIndicator size={75}/><Text style={[Styles.ft_regular,{textAlign:'center',marginBottom:20}]}>{'Gerando id único do aplicativo\n\nAguarde...'}</Text></View>),'light',()=>(null))
                     setLoad(!load),
                     gerarIdUnico()
                   }}
@@ -74,7 +146,9 @@ export default function Step_2({navigation}:any) {
                   </View>
                   <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.w95,Styles.success]}
                     onPress={()=>{
-                      openWebsite('https://sejaparceiro.gsapp.com.br/?comando=register_app&uniqueId='+uniqueId+'&returnUrl=../telas/dashboard/');
+                      
+                      navigation.navigate('register app',{id_app:uniqueId});
+                      //openWebsite('https://sejaparceiro.gsapp.com.br/?comando=register_app&uniqueId='+uniqueId+'&returnUrl=../telas/dashboard/');
                     }}
                   >
                     <Text style={[Styles.em_linhaHorizontal,Styles.ft_regular,Styles.lblprimary]}>Registrar app</Text>
@@ -87,7 +161,8 @@ export default function Step_2({navigation}:any) {
 
                 <TouchableOpacity style={[Styles.w95,Styles.btn,Styles.em_linhaHorizontal,Styles.primary,{}]}
                   onPress={()=>{
-                    navigation.navigate('requisicao');
+                    verificarRegistro(uniqueId);
+                    //navigation.navigate('requisicao');
                   }}
                 >
                   <Text style={[Styles.em_linhaHorizontal,Styles.ft_regular,Styles.lblprimary]}>Continuar configuração</Text>

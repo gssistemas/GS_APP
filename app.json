@@ -2,7 +2,7 @@
   "expo": {
     "name": "GS_APP",
     "slug": "GS_APP",
-    "version": "1.0.13",
+    "version": "1.0.20",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -20,13 +20,14 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.gsapp.com.br.GS_APP",
-      "versionCode": 13,
+      "versionCode": 20,
       "useNextNotificationsApi": true,
       "googleServicesFile": "./google-services.json",
       "config":{
         "googleMaps":{
           "apiKey":"AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco"
-        }
+        },
+        "googleMobileAdsAppId": "ca-app-pub-6500558082769474/2773025696"
       }
     },
     "web": {
@@ -38,7 +39,7 @@
         "projectId":"c3d90517-7fb1-4c4e-87e2-86b8a6e181d7"
       },
       "firebase": {
-        "apiKey": "AIzaSyBg8DjTB-azWUfifASLhLWgK4Pb4UzBHco",
+        "apiKey": "AIzaSyB4nn7jaylKuDUmL8A16YQrZrAsHUPX9Oo",
         "authDomain": "gs-app-e02f5.firebaseapp.com",
         "projectId": "gs-app-e02f5",
         "storageBucket": "gs-app-e02f5.appspot.com",
