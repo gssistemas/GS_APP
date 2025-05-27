@@ -23,7 +23,7 @@ export default function ResetCache() {
                 index:0,
                 routes:[
                     {
-                        name:'comecar',
+                        name:'home os',
                     }
                 ]
             })
@@ -33,7 +33,7 @@ export default function ResetCache() {
         <SafeAreaView style={[{flex:1}]}>
             <View style={[Styles.em_linhaVertical,{height:'100%'}]}>
                 <ActivityIndicator size={75} color={'blue'} animating={true} style={[{marginBottom:20}]}/>
-                <ThemedText type='title' style={[Styles.w100,{textAlign:'center',marginBottom:10}]}>Saindo...</ThemedText>
+                <ThemedText type='title' style={[Styles.w100,{textAlign:'center',marginBottom:10}]}>Reiniciando...</ThemedText>
                 <ThemedText type='defaultSemiBold' style={[Styles.w100,{textAlign:'center',marginBottom:10}]}>{'Resetando cachê do aplicativo,\n\nAguarde um momento...'}</ThemedText>
             </View>
             <StatusBar animated={true} translucent={true} hidden={true}/>

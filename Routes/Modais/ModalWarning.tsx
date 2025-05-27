@@ -40,7 +40,7 @@ export default function ModalWarning() {
               </View>
             }
             <View style={[Styles.em_linhaVertical,Styles.w100]}>
-              <Text style={[Styles.w100,{maxWidth:'100%',alignItems:'center',justifyContent:'center',textAlign:'center'}]}>{conteudoModal}</Text>
+              {conteudoModal}
             </View>
             <View style={[Styles.em_linhaHorizontal,Styles.w100,{alignItems:'center',justifyContent:'space-between',borderTopWidth:1,borderTopColor:'#9999'}]}>
               {

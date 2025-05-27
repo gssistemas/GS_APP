@@ -15,7 +15,7 @@ import AppLoading from '../../../../Components/Loader/AppLoading';
 export default function HeaderLeftIndex({data}:any) {
     const navigation = useNavigation()
     const {theme} = useTheme()
-    const {usuario,login,email,senha,options,logof,getModalStyle,osInicada,getModalStyleLabel,apresentaModal,fecharModal,getModalStyleLabelAlert,appIsValid,appValidationArray,} = useContext<any>(AuthLogin)
+    const {usuario,login,email,senha,options,logof,getModalStyle,osInicada,notificationsCount,count,getModalStyleLabel,apresentaModal,fecharModal,getModalStyleLabelAlert,appIsValid,appValidationArray,} = useContext<any>(AuthLogin)
     const [modalVisible, setModalVisible] = useState(false);
     const slideAnim = useRef(new Animated.Value(-300)).current;
     const [isLoad,setIsLoad] = useState(false);
@@ -29,7 +29,7 @@ export default function HeaderLeftIndex({data}:any) {
         }).start();
     };
 
-    console.log('user',usuario);
+    //console.log('user',usuario);
     
     const closeModal = () => {
         Animated.timing(slideAnim, {
@@ -71,14 +71,22 @@ export default function HeaderLeftIndex({data}:any) {
                     <View style={styles.modalBackground}>
                         <Animated.View style={[styles.modalContainer, { transform: [{ translateX: slideAnim }] }]}>
                             <ThemedView style={styles.modalTitle}>
+                                
                                 {usuario === null ? 
                                     <Text style={[Styles.em_linhaHorizontal,Styles.btn,Styles.w100,getModalStyle('danger'),getModalStyleLabel('danger'),{color:'#000',textAlign:'center'}]}>Login incorreto!</Text> 
-                                    : 
-                                    <View style={[Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                        <Image source={{uri:usuario !== null && usuario.imagem !== undefined ? Config.configuracoes.pathPadrao+'/'+usuario.imagem : 'https://gsapp.com.br/favicon.ico'}} style={[styles.avatar,Styles.mr_5,{width:45,height:45,resizeMode:'stretch'}]}/>
-                                        {usuario === null ? <TouchableOpacity><ThemedText type='defaultSemiBold'>Faça login</ThemedText></TouchableOpacity> : <ThemedText type='defaultSemiBold' style={[{color:'#FFF',marginVertical:10}]}>{usuario.apelido+'\n'+usuario.nome}</ThemedText>}
-                                    </View>
-                                    }
+                                : 
+                                    <TouchableOpacity
+                                        onPress={()=>{
+                                            navigation.navigate('user');
+                                        }}
+                                    >
+                                        <View style={[Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
+                                            <Image source={{uri:usuario !== null && usuario.imagem !== undefined ? Config.configuracoes.pathPadrao+'/'+usuario.imagem : 'https://gsapp.com.br/favicon.ico'}} style={[styles.avatar,Styles.mr_5,{width:45,height:45,resizeMode:'stretch'}]}/>
+                                            {usuario === null ? <TouchableOpacity><ThemedText type='defaultSemiBold'>Faça login</ThemedText></TouchableOpacity> : <ThemedText type='defaultSemiBold' style={[{color:'#FFF',marginVertical:10}]}>{usuario.apelido+'\n'+usuario.nome}</ThemedText>}
+                                        </View>
+                                    </TouchableOpacity>
+                                }
+                                
                                 {usuario === null ? <TouchableOpacity style={[Styles.btn,usuario === null ? getModalStyle('danger') : '',{marginTop:10,}]}
                                     onPress={()=>{
                                         Alert.alert('Sair','Tem certeza que deseja sair?',[
@@ -118,7 +126,15 @@ export default function HeaderLeftIndex({data}:any) {
                                                 <Text style={[getModalStyleLabel('danger')]}>Novo</Text>
                                             </View>
                                         }
-                                        
+                                        {
+                                            option.badge === true ?
+                                            <View style={[Styles.btn,Styles.warning,Styles.em_linhaHorizontal,{marginHorizontal:0,marginVertical:0,paddingHorizontal:5,paddingVertical:2}]}>
+                                                <MaterialCommunityIcons name={option._badgeItem} size={18} style={[getModalStyleLabelAlert('danger')]}/>
+                                                <Text style={[getModalStyleLabelAlert('danger'),{paddingHorizontal:5}]}>{notificationsCount !== null && notificationsCount !== undefined ? notificationsCount.length : 0}</Text>
+                                            </View>
+                                            :
+                                            null
+                                        }
                                     </TouchableOpacity>
                                 )})}
                                 <TouchableOpacity
@@ -165,7 +181,7 @@ export default function HeaderLeftIndex({data}:any) {
                             >
                                 <ThemedText type='title' style={[Styles.ft_bold,{textAlign:'center'}]}>{(config.expo.slug).replace('_',' ')}</ThemedText>
                                 <ThemedText type='defaultSemiBold'  style={[{textAlign:'center'}]}>{'Versão:'+config.expo.version+' ('+Config.configuracoes.release+')'}</ThemedText>
-                                <ThemedText style={[Styles.ft_regular,{textAlign:'center'}]}>Status da licença: {appIsValid === true ? 'Licenciado' : 'Licença expirada'}</ThemedText>
+                                <ThemedText style={[Styles.ft_regular,appIsValid === true ? getModalStyleLabelAlert('success') : getModalStyleLabelAlert('danger'),{textAlign:'center'}]}>{appIsValid === true ? (<MaterialCommunityIcons name='shield-check' size={16} style={[getModalStyleLabelAlert('success'),Styles.mr_5]}/>) : <MaterialCommunityIcons name='shield-remove' size={16} style={[getModalStyleLabelAlert('danger'),Styles.mr_5]}/>}Status da licença: {appIsValid === true ? 'Licenciado' : 'Licença expirada'}</ThemedText>
                                 <ThemedText style={[Styles.ft_regular,{textAlign:'center'}]}>TODOS OS DIREITOS RESERVADOS.</ThemedText>
                             </TouchableOpacity>
                         </Animated.View>

@@ -26,7 +26,7 @@ export default function HeaderRightIndex({navigation}:any) {
                                 if(osInicada === null){
                                     logof()
                                 }else{
-                                    console.log(osInicada);
+                                    //console.log(osInicada);
                                     Alert.alert('Não permitido!','Você não poderá sair até concluir a O.S.');
                                 }
                             }

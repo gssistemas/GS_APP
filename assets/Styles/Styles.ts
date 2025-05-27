@@ -4,6 +4,15 @@ import Config from '../Config/Config.json';
 const { width,height} = Dimensions.get('window');
 
 export const Styles = StyleSheet.create({
+    trianguloDireita: {
+      right: -10,
+      borderBottomColor: "#cacaca",
+      transform: [{ rotate: "180deg" }],
+    },
+    trianguloEsquerda: {
+      left: -10,
+      borderBottomColor: "#00BFFF",
+    },
     title:{
       fontSize:36,
       textAlign:'center',
@@ -205,6 +214,9 @@ export const Styles = StyleSheet.create({
   danger:{
       backgroundColor:'#dc3545',
   },
+  dark:{
+      backgroundColor:'#4d5154',
+  },
   light:{
       backgroundColor:'#f8f9fa',
   },
@@ -226,7 +238,9 @@ export const Styles = StyleSheet.create({
   btn_danger:{
       color:'#dc3545',
   },
-
+  btn_dark:{
+      color:'#4d5154',
+  },
   lblprimary:{
       color:'#FFFFFF',
   },
@@ -247,6 +261,9 @@ export const Styles = StyleSheet.create({
   },
   lbllight:{
       color:'#000000',
+  },
+  lbl_dark:{
+      color:'#FFFFFF',
   },
   containerHome:{
       width:'100%',height:'100%',
@@ -271,6 +288,33 @@ export const Styles = StyleSheet.create({
   },
   alertlight:{
     color:'#000000',
+  },
+  alertdark:{
+    color:'#4d5154',
+  },
+  borderprimary:{
+    borderColor:'#0d6efd',
+  },
+  bordersecondary:{
+      borderColor:'#6c757d',
+  },
+  bordersuccess:{
+      borderColor:'#198754',
+  },
+  borderinfo:{
+      borderColor:'#0dcaf0',
+  },
+  borderwarning:{
+      borderColor:'#ffc107',
+  },
+  borderdanger:{
+      borderColor:'#dc3545',
+  },
+  borderlight:{
+    borderColor:'#000000',
+  },
+  borderdark:{
+    borderColor:'#4d5154',
   },
   dropdown: {
     height: 50,
@@ -410,5 +454,25 @@ export const Styles = StyleSheet.create({
     top: 10,
     left: 10,
     borderRadius: 5,
+  },
+  triangleDe: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 50,
+    borderRightWidth: 50,
+    borderBottomWidth: 100,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'blue', // Cor do triângulo
+  },
+  trianglePara: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 50,
+    borderRightWidth: 50,
+    borderBottomWidth: 100,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: 'blue', // Cor do triângulo
   },
 });

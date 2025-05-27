@@ -23,7 +23,7 @@ export default function Mapa({route,navigation}:any) {
 
     const mapRef = useRef(null);
 
-    console.log('Endereco do cliente:',address);
+    //console.log('Endereco do cliente:',address);
     const {osInicada,usuario,fecharModal,apresentaModal,buscarCoordenadas,IniciarOs,salvarVariaveis,OsIniciada} = useContext<any>(AuthLogin);
 
     async function iniciar(){
@@ -31,7 +31,7 @@ export default function Mapa({route,navigation}:any) {
             //tela:string,DadosOs:any,codigoStatusOs:number,os:number|string,acao?:Function|ReactElement|ReactNode|undefined,comando:string
             const retorno = await buscarCoordenadas('os iniciada',osInicada.dadosOs,900,osInicada.dadosOs.os,'inicio trabalho','inicio trabalho','iniciarOs');
             if(retorno.code === 0){
-                console.log('retorno iniciar Os=>',retorno);
+                //console.log('retorno iniciar Os=>',retorno);
                 //comando:any,localizacao:any,profissional:any,dados:any,codigoStatus:any,os:any,tela:string,acao:Function|ReactElement|ReactNode|undefined|null
                 const iniOs = await IniciarOs('iniciarOs',retorno.location.coords.latitude+','+retorno.location.coords.longitude,usuario.id_user,osInicada.dadosOs,900,osInicada.dadosOs.os,'os iniciada','');
 
@@ -43,7 +43,7 @@ export default function Mapa({route,navigation}:any) {
                         const OsIni = await OsIniciada(JSON.stringify({status:true,dadosOs:osInicada.dadosOs,tela:'iniciar os'}),'','','os iniciada');
 
                         if(OsIni.code ===0){
-                            console.log('os iniciada=>',OsIni);
+                            //console.log('os iniciada=>',OsIni);
                             //comando:string,param: any|Function|ReactElement|ReactNode|null,param_2:any|Function|ReactElement|ReactNode|null,tela:string
                             //setTimeout(() => {
                                 navigation.reset({

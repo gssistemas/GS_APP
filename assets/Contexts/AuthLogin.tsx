@@ -19,6 +19,8 @@ import { ThemedText } from '../../Routes/Components/ThemedText';
 import { captureRef } from 'react-native-view-shot';
 import { manipulateAsync, FlipType, SaveFormat, SaveOptions} from 'expo-image-manipulator';
 import { Canvas, Patch, Path, Skia, SkPath, useTouchHandler,SkiaDomView, rotate} from '@shopify/react-native-skia';
+import { ThemedView } from '../../Routes/Components/ThemedView';
+import { list } from 'firebase/storage';
 
 export const AuthLogin = createContext({});
 
@@ -44,35 +46,66 @@ function AuthLoginProvider({children}:any){
     const [fechamentos_,setFechamentos_] = useState(null);
     const [appIsValid,setAppIsValid] = useState(false);
     const [appValidationArray,setAppValidationArray] = useState(null);
+    const [configApp,setConfigApp] = useState<null|any>(null);
+    const [conf,setConf] = useState<any|null>(null);
+    const [asyncLoad,setAsyncLoad] = useState<boolean>(false);
+    const [isOffline,setIsOffline] = useState<boolean>(false);
 //---------------------------------------------inicio das opcoes do usuario
     const options = [
-        { id: 1, title: 'Ordens de serviços', action: () => {navigation.navigate('home os')},icone:'archive',colorText:'#999999',new:false},
-        { id: 2, title: 'Notificações', action: () => {navigation.navigate('notifications')},icone:'bell',colorText:'#999999',new:false},
-        { id: 3, title: 'Assistências', action: () => {navigation.navigate('assistencias os')},icone:'assistant',colorText:'red',new:false},
-        { id: 4, title: 'Central de mensagens', action: () => console.log('Option 2 selected'),icone:'forum',colorText:'#999999',new:false},
-        { id: 5, title: 'Recebimentos', action: () => {navigation.navigate('faturamento')},icone:'currency-usd',colorText:'#999999',new:true},
-        { id: 6, title: 'Fechamentos', action: () => {navigation.navigate('fechamento')},icone:'archive-check',colorText:'green',new:true},
-        { id: 7, title: 'Trocar senha', action: () => {navigation.navigate('reset pass')},icone:'lock-reset',colorText:'#999999',new:false},
-        { id: 8, title: 'Agenda', action: () => console.log('Option 3 selected'),icone:'calendar-month',colorText:'#999999',new:false},
+        { id: 1, title: 'Ordens de serviços', action: () => {navigation.navigate('home os')},icone:'archive',colorText:'#999999',new:false,badge:false,_badgeItem:()=>{null}},
+        { id: 2, title: 'Notificações', action: () => {navigation.navigate('notifications')},icone:'bell',colorText:'#999999',new:false,badge:true,_badgeItem:'bell-badge'},
+        { id: 3, title: 'Assistências', action: () => {navigation.navigate('assistencias os')},icone:'assistant',colorText:'red',new:false,badge:false,_badgeItem:()=>{null}},
+        { id: 4, title: 'Central de mensagens', action: () => {navigation.navigate('mensagens')},icone:'forum',colorText:'#999999',new:false,badge:false,_badgeItem:()=>{null}},
+        { id: 5, title: 'Parciais de faturamento', action: () => {navigation.navigate('faturamento')},icone:'currency-usd',colorText:'#999999',new:true,badge:false,_badgeItem:()=>{null}},
+        { id: 6, title: 'Fechamentos', action: () => {navigation.navigate('fechamento')},icone:'archive-check',colorText:'green',new:true,badge:false,_badgeItem:()=>{null}},
+        { id: 7, title: 'Trocar senha', action: () => {navigation.navigate('reset pass')},icone:'lock-reset',colorText:'#999999',new:false,badge:false,_badgeItem:()=>{null}},
+        { id: 8, title: 'Agenda', action: () => console.log('Option 3 selected'),icone:'calendar-month',colorText:'#999999',new:false,badge:false,_badgeItem:()=>{null}},
         { id: 9, title: 'Limpar cache', action: () => {
-            Alert.alert('ATENÇÃO!!!','Ao limpar o cachê do aplicativo você perderá:\n\n1-dados de login(Terá que fazer login novamente)\n\n2-O.S. finalizadas "OFFLINE" Terão que ser executadas as etapas novamente.\n\n3-O APP será reiniciado do zero na configuração de alimentação.\n\n Sabendo disso você ainda deseja continuar?',[
-                {
-                    text:'NÃO',
-                },
-                {
-                    text:'SIM',
-                    onPress:()=>{
-                        navigation.reset({
-                            index:0,
-                            routes:[
-                                {
-                                    name:'reset cache',
-                                }
-                            ]
-                        })
-                    }
+            apresentaModal(
+                'dialog',
+                'help',
+                'Resetar cachê do APP',
+                ()=>(
+                    <ThemedView style={[Styles.w100,Styles.em_linhaVertical,{paddingVertical:15}]}>
+                        <ThemedText type='title' style={[Styles.w100,{textAlign:'center'}]}>{'ATENÇÃO'}</ThemedText>
+                        <ThemedText>{'\n'}</ThemedText>
+                        <ThemedText type='subtitle' style={[Styles.w100,{textAlign:'center'}]}>{'Ao limpar o cachê do aplicativo você perderá:'}</ThemedText>
+                        <ThemedText>{'\n\n'}</ThemedText>
+                        <ThemedText type='defaultSemiBold' style={[Styles.w100,{textAlign:'left'}]}>{'1-O.S. finalizadas "OFFLINE" Terão que ser executadas as etapas novamente.'}</ThemedText>
+                        <ThemedText type='defaultSemiBold' style={[Styles.w100,{textAlign:'left'}]}>{'2-Imagens das ordens de serviço terão que ser tiradas novamente.'}</ThemedText>
+                        <ThemedText>{'\n\n'}</ThemedText>
+                        <ThemedText type='subtitle' style={[Styles.w100,{textAlign:'center'}]}>{'Deseja continuar?'}</ThemedText>
+                    </ThemedView>
+                ),
+                'default',
+                ()=>{
+                    return(
+                        <>
+                            <TouchableOpacity style={[Styles.btn,Styles.success,Styles.em_linhaHorizontal,Styles.w50,Styles.btnDialog,Styles.btnDialogLeft,{}]}
+                                onPress={()=>{
+                                    fecharModal('');
+                                }}
+                            >
+                                <Text style={[Styles.ft_regular,Styles.lblsuccess]}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[Styles.btn,Styles.danger,Styles.em_linhaHorizontal,Styles.w50,Styles.btnDialog,Styles.btnDialogRight,{}]}
+                                onPress={()=>{
+                                    navigation.reset({
+                                        index:0,
+                                        routes:[
+                                            {
+                                                name:'reset cache',
+                                            }
+                                        ]
+                                    });
+                                }}
+                            >
+                                <Text style={[Styles.ft_regular,Styles.lbldanger]}>Sim</Text>
+                            </TouchableOpacity>
+                        </>
+                    )
                 }
-            ])
+            );
         },icone:'cached',colorText:'#999999'},
     ];
 //---------------------------------------------fim das opcoes do usuario
@@ -141,7 +174,6 @@ function AuthLoginProvider({children}:any){
     function searchByTitle(array:any, title:string) {
         const result = array.find((item: { title: string; }) => item.title.toLowerCase().includes(title.toLowerCase()));
         setPesquiza(result ? [result] : []);
-        //console.log('dados da pesquiza=>',pesquiza)
     }
 //----------------------------------------------inicio das variaveis de assinatura
     const canvasRef = useRef(null);
@@ -168,22 +200,30 @@ function AuthLoginProvider({children}:any){
     async function verificarConexao(): Promise<{status: string, code: number, mensagem: string, retorno: any}> {
         //try {
             // Obtém o estado da conexão de rede
-            const state = await NetInfo.fetch();
-            setIsConectedNetwork(state.isConnected);
-            
-            // Atualiza o estado de conexão
-            
-            //console.log('status real da conexão=>',state.isConnected)
-            // Retorna o status com base na conexão de rede
-            if (isConnectedNetwork === true) {
+            //const alApp = await AlimentarApp();
+
+            if(isOffline === true){
                 fecharModal('');
-                setTypeConn(state.type);
-                return { status: 'sucesso', code: 0, mensagem: 'Conectado', retorno: state };
-            } else {
-                fecharModal('');
-                setTypeConn(state.type);
-                //setTypeConn('mobile');
-                return { status: 'Erro', code: 149, mensagem: 'Offline', retorno: state };
+                setTypeConn('mobile');
+                setModalVisible(false);
+                setIsConectedNetwork(false);
+                return { status: 'Erro', code: 149, mensagem: 'Offline', retorno: [{conectado:false,tipo:'mobile'}] };
+            }else{
+                const state = await NetInfo.fetch();
+                setIsConectedNetwork(state.isConnected);
+                // Retorna o status com base na conexão de rede
+                if (isConnectedNetwork === true) {
+                    fecharModal('');
+                    setTypeConn(state.type);
+                    setModalVisible(false);
+                    return { status: 'sucesso', code: 0, mensagem: 'Conectado', retorno: [{conectado:isConnectedNetwork,tipo:state.type}] };
+                } else {
+                    fecharModal('');
+                    setTypeConn(state.type);
+                    setModalVisible(false);
+                    //setTypeConn('mobile');
+                    return { status: 'Erro', code: 149, mensagem: 'Offline', retorno: [{conectado:false,tipo:state.type}] };
+                }
             }
         /*} catch (error) {
             console.error('Erro ao verificar a conexão:', error);
@@ -192,8 +232,8 @@ function AuthLoginProvider({children}:any){
     }
 
     async function login(dadosLogin:any){
-        if(isConnectedNetwork === true){
-            apresentaModal(
+        //if(isConnectedNetwork === true){
+        apresentaModal(
                 'load',
                 'account-convert',
                 'Realizando login',
@@ -205,82 +245,97 @@ function AuthLoginProvider({children}:any){
                 ),
                 'default',
                 ()=>{null}
-            );
-            try {
-                const response = await axios({
-                    method:'post',
-                    url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
-                    params:dadosLogin,
-                })
+        );
+        const response = await axios({
+            method:'post',
+            url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
+            params:dadosLogin,
+        })
 
-                console.log(response.data);
-                if(response.data[0].status === 'OK' && response.data[0].statusCode === 200){
-                        //Alert.alert('Sucesso',response.data[0].statusMensagem);
-                        const retorno = await salvarVariaveis(
-                            'usuario',
-                            'usuario',
-                            JSON.stringify(response.data[0].dadosUser),
+        if(response.data[0].status === 'OK' && response.data[0].statusCode === 200){
+                //Alert.alert('Sucesso',response.data[0].statusMensagem);
+                const retorno = await salvarVariaveis(
+                    'usuario',
+                    'usuario',
+                    JSON.stringify(response.data[0].dadosUser),
+                );
+
+                if(retorno.code ===0){
+                    setLoad(false)
+                    //executarAcao(comando:string,param: any|Function|ReactElement|ReactNode|null,param_2:any|Function|ReactElement|ReactNode|null,tela:string)
+                    const alm = await AlimentarApp();
+
+                    if(alm.code ===0){
+                        executarAcao('login',null,null,'home os');
+                        arlterarModal(
+                            'success',
+                            'account-check',
+                            'Sucesso',
+                            ()=>(
+                                <View style={[Styles.w100,Styles.em_linhaVertical,{paddingVertical:15}]}>
+                                    <MaterialCommunityIcons name='account-check' size={75} style={[getModalStyleLabel('success')]}/>
+                                    <Text style={[Styles.ft_regular,Styles.w90,getModalStyleLabel('success'),{textAlign:'center'}]}>{'Login realizado com sucesso!'}</Text>
+                                </View>
+                            ),
+                            'success',
+                            ()=>{null},
+                            'Login realizado com sucesso!'
                         );
-                        if(retorno?.code ===0){
-                            setLoad(false)
-                            //executarAcao(comando:string,param: any|Function|ReactElement|ReactNode|null,param_2:any|Function|ReactElement|ReactNode|null,tela:string)
-                            const alm = await AlimentarApp();
-
-                            if(alm.code ===0){
-                                executarAcao('login',null,null,'home os');
-                                arlterarModal(
-                                    'success',
-                                    'account-check',
-                                    'Sucesso',
-                                    ()=>(
-                                        <View style={[Styles.w100,Styles.em_linhaVertical,{paddingVertical:15}]}>
-                                            <MaterialCommunityIcons name='account-check' size={75} style={[getModalStyleLabel('success')]}/>
-                                            <Text style={[Styles.ft_regular,Styles.w90,getModalStyleLabel('success'),{textAlign:'center'}]}>{'Login realizado com sucesso!'}</Text>
-                                        </View>
-                                    ),
-                                    'success',
-                                    ()=>{null},
-                                    'Login realizado com sucesso!'
-                                );
-                            }
-                            //console.log('retorno=>',retorno);
-                        }else{
-                            //console.log('209=>',retorno)
-                            setLoad(false);
-                            return retorno;
-                        }
-                }else if(response.data[0].status ==='OK' && response.data[0].statusCode === 200 || response.data === ''){
-                        Alert.alert('Erro',response.data[0].statusMensagem+'\n\nError code:"'+response.data[0].statusCode+'"');
+                    }
                 }else{
-                        Alert.alert('Erro',response.data[0].statusMensagem+'\n\nError code:"GS_APP_'+response.data[0].statusCode+'"');
+                    setLoad(false);
+                    return retorno;
                 }
-            } catch (error:any) {
-                console.log(error)
-            }
+        }else if(response.data[0].status ==='OK' && response.data[0].statusCode === 200 || response.data === ''){
+                    apresentaModal(
+                        'error',
+                        'alert-octagon',
+                        'Erro',
+                        ()=>(
+                            <View style={[Styles.w100,Styles.em_linhaVertical,{paddingVertical:15}]}>
+                                <MaterialCommunityIcons name='alert-octagon' size={75} style={[getModalStyleLabel('danger')]}/>
+                                <Text style={[Styles.ft_regular,Styles.w90,getModalStyleLabel('danger'),{textAlign:'center',maxWidth:'90%'}]}>{response.data[0].statusMensagem+'\n\nError code:"'+response.data[0].statusCode+'"'}</Text>
+                            </View>
+                        ),
+                        'danger',
+                        ()=>{null}
+                    );
+                    setLoad(false);
+                    //Alert.alert('Erro',response.data[0].statusMensagem+'\n\nError code:"'+response.data[0].statusCode+'"');
         }else{
-            setLoad(false);
-            console.log(isConnectedNetwork,usuario)
+                    apresentaModal(
+                        'warning',
+                        'alert',
+                        'Erro',
+                        ()=>(
+                            <View style={[Styles.w100,Styles.em_linhaVertical,{paddingVertical:15}]}>
+                                <MaterialCommunityIcons name='alert' size={75} style={[getModalStyleLabel('warning')]}/>
+                                <Text style={[Styles.ft_regular,Styles.w90,getModalStyleLabel('warning'),{textAlign:'center',maxWidth:'90%'}]}>{response.data[0].statusMensagem+'\n\nError code:"'+response.data[0].statusCode+'"'}</Text>
+                            </View>
+                        ),
+                        'warning',
+                        ()=>{null}
+                    );
+                    setLoad(false);
+                    //Alert.alert('Erro',response.data[0].statusMensagem+'\n\nError code:"GS_APP_'+response.data[0].statusCode+'"');
         }
     }
 
     async function cacheClear() {
         try {
-            await AsyncStorage.removeItem('httpsAli');
+            /*await AsyncStorage.removeItem('httpsAli');
             await AsyncStorage.removeItem('usuario');
             await AsyncStorage.removeItem('email');
-            await AsyncStorage.removeItem('senha');
+            await AsyncStorage.removeItem('senha');*/
             await AsyncStorage.removeItem('OsIniciada');
             const status = await AlimentarApp();
 
             if(status.code ===0){
-                //console.log('cache limpo com sucesso!')
                 return {status:'sucesso',code:0,mensagem:'sucesso'};
             }else{
-                //console.log('Erro ao limpar o cache do aplicativo',error)
                 return {status:'erro',code:243,mensagem:'erro'};
             }
         } catch (error) {
-            //console.log('Erro ao limpar o cache do aplicativo',error)
             return {status:'erro',code:245,mensagem:'erro',retorno:error};
         }
     }
@@ -295,30 +350,54 @@ function AuthLoginProvider({children}:any){
             const os = await AsyncStorage.getItem('listMinhasOs');
             const unq = await AsyncStorage.getItem('idApp');
             const lstOff = await AsyncStorage.getItem('listOffline');
+            const itsOnlineOffline = await AsyncStorage.getItem('isOffline');configApp
+            const jsonConfig = await AsyncStorage.getItem('configApp');
             //verifica se existe um lista de O.S. offline
-            //console.log('290=>',lstOff);
+            
+            const verifConn = await verificarConexao();
+
+            if(itsOnlineOffline !== null){
+                let OnlineOffilne = false;
+
+                if(itsOnlineOffline === 'false'){
+                    setIsOffline(false);
+                    setTypeConn(verifConn.retorno[0].type);
+                    //return { status: 'sucesso', code: 0, mensagem: 'Conectado', retorno:verifConn.retorno[0] };
+                }else{
+                    setIsOffline(true);
+                    setTypeConn(verifConn.retorno[0].type);
+                    //return { status: 'sucesso', code: 0, mensagem: 'Conectado', retorno: verifConn.retorno[0] };
+                }
+            }else{
+                setIsOffline(false);
+                //errorsLoad.push('Você está online!');
+            }
+
             if(lstOff !== null){
                 setListOsOffline(JSON.parse(lstOff));
             }else{
                 setListOsOffline(null);
+                //errorsLoad.push('Lista de O.S. offline não carregada!');
             }
             //verifica se existe um lista de O.S. online
             if(os !== null){
                 setListMinhasOs(JSON.parse(os));
             }else{
                 setListMinhasOs(null);
+                //errorsLoad.push('Lista de O.S. não carregada!');
             }
             //verifica se existe um id ùnico do app
             if(unq !== null){
                 setUniqueId(unq);
             }else{
                 setUniqueId('');
+                //errorsLoad.push('ID do aplicativo não configurado!');
             }
-            //console.log('258=>',typeof OsIni)
 //---------------------------------verifica se há alimentação de API
             if(httpsAl === null){
                 setHttpAlimentacao(null);
                 setTela('comecar');
+                //errorsLoad.push('Alimentação não configurada!');
             }else{
                 setHttpAlimentacao(httpsAl);
                 setIsConfigured(true);
@@ -327,48 +406,42 @@ function AuthLoginProvider({children}:any){
             
             if(OsIni === null){
                 setOsIniciada(null);
+                //errorsLoad.push('Nenhuma O.S. iniciada!');
             }else{
-                
                 setIsOs(true);
-                const jsonValue = JSON.parse(OsIni)
-                setOsIniciada(jsonValue);
-                setTela(jsonValue.tela);              
+                setOsIniciada(JSON.parse(OsIni));
+                let osini = JSON.parse(OsIni);
+                setTela(osini.tela);
             }
-//---------------------------------verifica se o email esta vazio
-            /*if(mail === null){
-                setEmail('');
+//---------------------------------verifica se existe uma configuração de empresa
+            if(jsonConfig === null){
+                setConfigApp(null);
             }else{
-                setEmail(mail);
+                setConfigApp(JSON.parse(jsonConfig));
             }
-//---------------------------------verifica se a senha está vazia
-            if(pass === null){
-                setSenha('');
-            }else{
-                setSenha(pass);
-            }*/
-//---------------------------------verifica se um usuário está logado
+//---------------------------------verifica se existe um usuário logado
             if(usr === null){
                 setUsuario(null);
+                //errorsLoad.push('Usuário não logado!');
             }else{
                 const us = JSON.parse(usr);
                 setIsUser(true)
                 setTela('home os');
                 setUsuario(us);
-                return {status:'sucesso',code:0,mensagem:'sucesso',retorno:{almApp:httpsAl,user:usr,mail:mail,pass:pass,OS:OsIniciada,erros:null}};
+                //return {status:'sucesso',code:0,mensagem:'sucesso',retorno:{almApp:httpsAl,user:usr,mail:mail,pass:pass,OS:OsIniciada,erros:null}};
             }
-            //console.log('294=>','alimentação=>',httpsAl+'\nusuario=>',usr+'\nemail=>',mail+'\nsenha=>',pass+'\nOs iniciada=>',OsIniciada+'\n')
+//---------------------------------verifica se existe um email logado
+            
             if(errorsLoad === null){
                 setDataLoaded(true);
                 return {status:'sucesso',code:0,mensagem:'sucesso',retorno:{almApp:httpsAl,user:usr,mail:mail,pass:pass,OS:OsIni,erros:null}};
             }else{
-                //console.log('297=>',errorsLoad)
-                //console.log('302=>',errorsLoad)
-                return {status:'sucesso',code:298,mensagem:'sucesso',retorno:{almApp:httpsAl,user:usr,mail:mail,pass:pass,OS:OsIni,erros:errorsLoad}};
+                return {status:'sucesso',code:298,mensagem:'sucesso',retorno:{almApp:httpsAl,user:usr,mail:mail,pass:pass,OS:JSON.parse(OsIni),erros:errorsLoad}};
             }
+            //return {status:'Sem erros',code:0,mensagem:'Sucesso',retorno:null};
         } catch (error:any) {
-            console.log('259=>',error.message);
             setDataLoaded(true);
-            return {status:'com erros',code:0,mensagem:'com erros',retorno:null};//return {status:'sucesso',code:0,mensagem:error.message,retorno:null,erros:errorsLoad};
+            return {status:'com erros',code:0,mensagem:'com erros',retorno:error.message};//return {status:'sucesso',code:0,mensagem:error.message,retorno:null,erros:errorsLoad};
         }
     }
 
@@ -382,10 +455,37 @@ function AuthLoginProvider({children}:any){
                 tipo_montagem:tipo_montagem,
             }
         });
-        //console.log(retorno.data[0]);
+
         if(retorno.data[0].status === 'OK' && retorno.data[0].statusCode === 0){
             setMontantePgmto(retorno.data[0].arrayMontante.percent);
         }
+    }
+
+    async function buscarConfig(id_empresa:string){
+        const cfg = await verificarConexao();
+
+        if(cfg.code === 0){
+            const response:any = await Config_APP('config',id_empresa);
+            if(response.code === 0){
+                setAsyncLoad(true);
+                setModalVisible(false);
+                setLoad(false);
+                setConf(response.retorno);
+                return {status:'Sucesso',code:0,mensagem:'Configuração adicionada com sucesso!',retorno:response.retorno}
+            }else{
+                setAsyncLoad(false)
+                setModalVisible(false);;
+                setLoad(false);
+                setConf(null);
+                return {status:'Erro',code:1,mensagem:'Erro',retorno:null}
+            }
+        }else{
+            setAsyncLoad(true)
+            setModalVisible(false);
+            setLoad(false);
+            setConf(null);
+            return {status:'Erro',code:1,mensagem:'Erro',retorno:null}
+        }   
     }
 
     async function salvarVariaveis(params:any,id_chave:string,valor:string){
@@ -402,37 +502,33 @@ function AuthLoginProvider({children}:any){
             'default',
             ()=>{null}
         )
-        //console.log('Chave=>',id_chave,'\nValores passados=>',valor)
-            //try {
-                if(valor === ''){
-                    await AsyncStorage.removeItem(id_chave);
-                    //const amlApp = await AlimentarApp();
-
-                    //if(amlApp.code ===0){
-                        return {status:'sucesso',code:0,mensagem:'Sucesso'};
-                    /*}else{
-                        return {status:'error',code:293,mensagem:'Erro ao alimentar o aplicativo!'}; 
-                    }*/
-                }else{
-                    const salvar = await AsyncStorage.setItem(id_chave,valor);
-                    /*const amlApp = await AlimentarApp();
-
-                    console.log('salvar=>',salvar);
-                    if(amlApp.code ===0){*/
-                        return {status:'sucesso',code:0,mensagem:'Sucesso'};
-                    /*}else{
-                        return {status:'error',code:293,mensagem:'erro'}; 
-                    }*/
-                }
-            //} catch (error:any) {
-            //    return {status:'error',code:301,mensagem:error.message};
-            //}
-        /*}*/
         
+        try {
+            if(valor === ''){
+                await AsyncStorage.removeItem(id_chave);
+                const returnAmlApp = await AlimentarApp();
+
+                if(returnAmlApp.code === 0){
+                    return {status:'sucesso',code:0,mensagem:'Sucesso'};
+                }else{
+                    return {status:'error',code:351,mensagem:'Erro de alimentação do app'};
+                }
+            }else{
+                await AsyncStorage.setItem(id_chave,valor);
+                const returnAmlApp = await AlimentarApp();
+
+                if(returnAmlApp.code === 0){
+                    return {status:'sucesso',code:0,mensagem:'Sucesso'};
+                }else{
+                    return {status:'error',code:351,mensagem:'Erro de alimentação do app'};
+                }
+            }
+        } catch (error:any) {
+            return {status:'error',code:301,mensagem:error.message};
+        }
     }
 
     async function validarApp(unq:any){
-        //rtry {
         const req = await axios({
             method:'get',
             url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
@@ -442,58 +538,19 @@ function AuthLoginProvider({children}:any){
             }
         });
         
-        console.log('retorno da validação do app=>',req);
         if(req !== undefined){
             if(req.data[0].status === 'OK' && req.data[0].statusCode === 200 && req.data[0].dadosApp !== null){
                 setAppIsValid(true);
                 setAppValidationArray(req.data[0].dadosApp);
                 return {status:'sucesso',code:0,mensagem:'sucesso',retorno:req.data[0].dadosApp};
             }else{
-                return {status:'erro',code:424,mensagem:'erro',retorno:'Aplicativo não registrado!'};
+                setAppIsValid(false);
+                setAppValidationArray(req.data[0].dadosApp);
+                return {status:'erro',code:424,mensagem:'erro',retorno:'Aplicativo não registrado ou expirado!'};
             }
         }else{
             return {status:'erro',code:426,mensagem:'erro',retorno:'O servidor não conseguiu lidar com a requisição!'};
         }
-            /*if(uniqueId === ''){
-                
-                try {
-                    const unq = await AsyncStorage.getItem('idApp');
-                    console.log('411=>',unq)
-                    if(unq !== '' && unq !== null && unq !== undefined){
-                        
-                    }
-                } catch (error:any) {
-                    return {status:'erro',code:429,mensagem:'sucesso',retorno:error.message};
-                }
-            }else{
-                try {
-                    const req = await axios({
-                        method:'get',
-                        url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
-                        params:{
-                            comando:'validarapp',
-                            id:uniqueId
-                        }
-                    });
-
-                    console.log('retorno da validação do app=>',req);
-                    if(req !== undefined){
-                        if(req.data[0].status === 'OK' && req.data[0].statusCode === 200 && req.data[0].dadosApp !== null){
-                            return {status:'sucesso',code:0,mensagem:'sucesso',retorno:req.data[0].dadosApp};
-                        }else{
-                            return {status:'erro',code:424,mensagem:'erro',retorno:'Aplicativo não registrado!'};
-                        }
-                    }else{
-                        return {status:'erro',code:426,mensagem:'erro',retorno:'O servidor não conseguiu lidar com a requisição!'};
-                    }
-                } catch (error:any) {
-                    return {status:'erro',code:429,mensagem:'sucesso',retorno:error.message};
-                }
-            }*/
-        /*} catch (error:any) {
-            return {status:'erro',code:429,mensagem:'sucesso',retorno:error.message};
-        }*/
-        
     }
 
     async function guardarIdUnico(id:string){
@@ -510,7 +567,6 @@ function AuthLoginProvider({children}:any){
 
             const result = await AsyncStorage.setItem('idApp',id);
             setUniqueId(id);
-            //console.log(result);
             arlterarModal(
                 'success',
                 'check-all',
@@ -582,7 +638,7 @@ function AuthLoginProvider({children}:any){
                 'light',
                 'check-all',
                 'Agurade...',
-                ()=>(<View style={[Styles.em_linhaVertical]}><ActivityIndicator size={75}/><Text style={[Styles.ft_regular,getModalStyleLabel('light'),{textAlign:'center'}]}>{msgModal}</Text></View>),
+                ()=>(<View style={[Styles.em_linhaVertical,{marginBottom:20}]}><ActivityIndicator size={75}/><Text style={[Styles.ft_regular,getModalStyleLabel('light'),{textAlign:'center'}]}>{msgModal}</Text></View>),
                 'light',
                 ()=>(null),
                 'Gerando seu id único do aplicativo,\n\nAguarde...'
@@ -594,7 +650,6 @@ function AuthLoginProvider({children}:any){
     }
 
     async function VerificarRegistro(id:any){
-        //console.log(result);
         arlterarModal(
             'success',
             'check-all',
@@ -624,7 +679,6 @@ function AuthLoginProvider({children}:any){
     }
 
     function apresentaModal(idModal:string,iconeM:string,titleM:string,conteudoM:string|ReactNode|ReactElement|Function,styleM:StyleSheet|string,actionsM:Function){
-        //console.log('teste de modal','OK=>',idModal,modalVisible)
         switch (idModal) {
             case 'dialog':
                 setIconeModal(iconeM);
@@ -670,7 +724,6 @@ function AuthLoginProvider({children}:any){
     }
 
     function arlterarModal(idModal:string,iconeM:string,titleM:string,conteudoM:string|ReactNode|ReactElement|Function,styleM:StyleSheet|string,actionsM:Function,msgModal:string){
-        //console.log('teste de modal','OK=>',idModal,modalVisible)
         switch (idModal) {
             case 'dialog':
                 setIconeModal(iconeM);
@@ -736,6 +789,25 @@ function AuthLoginProvider({children}:any){
                 return Styles.info;
             case 'light':
                 return Styles.light;
+            case 'dark':
+                return Styles.dark;
+        }
+    };
+
+    const getModalStyleBorder = (style:string) => {
+        switch (style) {
+            case 'danger':
+                return Styles.borderdanger;
+            case 'warning':
+                return Styles.borderwarning;
+            case 'success':
+                return Styles.bordersuccess;
+            case 'info':
+                return Styles.borderinfo;
+            case 'light':
+                return Styles.borderlight;
+            case 'dark':
+                return Styles.borderdark;
         }
     };
 
@@ -751,6 +823,8 @@ function AuthLoginProvider({children}:any){
                 return Styles.lblinfo;
             case 'light':
                 return Styles.lbllight;
+            case 'dark':
+                return Styles.lbldark;
         }
     };
 
@@ -766,10 +840,13 @@ function AuthLoginProvider({children}:any){
                 return Styles.alertinfo;
             case 'light':
                 return Styles.alertlight;
+            case 'dark':
+                return Styles.lbldark;
         }
     };
 
-    async function buscarOs(comando:any,filtro:any) {
+    async function buscarOs(comando:any,nf_:any,dataInicial_:any,dataFinal_:any,nomeCliente_:any,ordemServico_:any,usr:any,status:number) {
+        
         apresentaModal(
             'load',
             'download-multiple',
@@ -789,10 +866,16 @@ function AuthLoginProvider({children}:any){
               url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
               params:{
                 comando:comando,
-                filtro:filtro,
+                nf:nf_,
+                dataIni:dataInicial_,
+                dataFim:dataFinal_,
+                cliente:nomeCliente_,
+                os:ordemServico_,
+                prof:usr,
+                status:status,
               }
             })
-            console.log('lista de os=>',response)
+            //console.warn('AuthLogin=>',response)
             if(response.data[0].dados !== null){
 
                 setListMinhasOs(response.data[0].dados)
@@ -801,18 +884,16 @@ function AuthLoginProvider({children}:any){
                     'listMinhasOs',
                     JSON.stringify(response.data[0].dados)
                 )
-
+                
                 if(retorno?.code ===0){
                     setLoad(false)
                     //executarAcao(comando:string,param: any|Function|ReactElement|ReactNode|null,param_2:any|Function|ReactElement|ReactNode|null,tela:string)
                     executarAcao('',null,null,'');
                     const ret = await AlimentarApp();
                     if(ret.code ===0){
-                        //console.log('retorno=>',ret);
-                        return {status:'sucesso',code:0,mensagem:'sucesso'};
+                        return {status:'sucesso',code:0,mensagem:'sucesso',retorno:response.data[0].dados};
                     }else{
-                        //console.log('retorno=>',ret);
-                        return {status:'erro',code:258,mensagem:'erro'};
+                        return {status:'erro',code:258,mensagem:'erro',retorno:null};
                     }
                 }else{
                     return {status:'error',code:581,mensagem:'Erro ao buscar as ordens de serviço!'};
@@ -840,8 +921,8 @@ function AuthLoginProvider({children}:any){
     }
 
     async function buscarNotificacoes(id_de:any,id_para:any){
-        try {
-            axios({
+        //try {
+            const notifyApp = await axios({
                 method:'get',
                 url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
                 params:{
@@ -849,14 +930,50 @@ function AuthLoginProvider({children}:any){
                     de:id_de,
                     para:id_para,
                 }
-            }).then((response)=>{
-                setNotificationsCount(response.data[0].dados_notify_app);
-                //console.log('response de notifications=>',response.data);
+            })
+            if(notifyApp.data[0].count_msg > 0){
+                setNotificationsCount(notifyApp.data[0].dados_notify_app);
+                return {status:'sucesso',code:0,mensagem:notifyApp.data[0].statusMensagem,count_msg:notifyApp.data[0].count_msg,retorno:notifyApp.data[0].dados_notify_app};
+            }else{
+                setNotificationsCount(notifyApp.data[0].dados_notify_app);
+                return {status:'sucesso',code:0,mensagem:'sucesso',count_msg:notifyApp.data[0].count_msg,retorno:null};
+            }
+            /*((response)=>{
+                
             }).catch((responseCatch)=>{
 
             })
-        } catch (error) {
+        //} catch (error) {
             
+        //}*/
+    }
+
+    async function Config_APP(comando:string,id_empresa:string){
+        const response = await axios({
+            method:'get',
+            url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
+            params:{
+              comando:comando,
+              id_empresa:id_empresa,
+            }
+        });
+        if(response.data[0].status === 'OK'){
+            if(response.data[0].statusCode === 200){
+                if(response.data[0].codeMensagem === 0){
+                    setConfigApp(response.data[0].configuracoes);
+                    const salvarConfig = await salvarVariaveis('configApp','configApp',JSON.stringify(response.data[0].configuracoes));
+                        
+                    if(salvarConfig.code !==0){
+                        ToastAndroid.showWithGravity('Erro:'+salvarConfig.code,ToastAndroid.LONG,ToastAndroid.BOTTOM);
+                        //Alert.alert('Erro','*_*\nEncontramos um erro!\n\nCódigo de erro:'+);
+                    }else{
+                        //console.warn('retorno config AuthLogin',response.data[0].configuracoes);
+                        setModalVisible(false);
+                        setLoad(false);
+                        return {status:'sucesso',code:0,mensagem:'Sucesso',retorno:response.data[0].configuracoes};
+                    }
+                }
+            }
         }
     }
 
@@ -944,7 +1061,6 @@ function AuthLoginProvider({children}:any){
                             os:os,
                         }
                     })
-                    //console.log('Ret=>',response.data[0])
                     if(response.data[0] === undefined){
                             arlterarModal(
                                 'error',
@@ -1026,7 +1142,6 @@ function AuthLoginProvider({children}:any){
                             os:os,
                         }
                     })
-                    //console.log('Ret=>',responseProblema.data[0])
                     if(responseProblema.data[0] === undefined){
                             arlterarModal(
                                 'error',
@@ -1115,59 +1230,81 @@ function AuthLoginProvider({children}:any){
     }
 
     async function buscarCoordenadas(tela:string,DadosOs:any,codigoStatusOs:number,os:number|string,acao?:Function|ReactElement|ReactNode|undefined,comando:string){
-        //roda o modal load 
-        arlterarModal(
-            'load',
-            'archive-check',
-            'Processando pedido...',
-            ()=>(
-                <View style={[Styles.em_linhaVertical,Styles.w100,getModalStyle('light'),{borderBottomLeftRadius:5,borderBottomRightRadius:5,marginBottom:10}]}>
-                    <ActivityIndicator size={75} color={'blue'}/>
-                    <Text style={[Styles.ft_medium,getModalStyleLabel('light'),{textAlign:'center',marginBottom:25}]}>{'Carregando localização\n\nAguarde...'}</Text>
-                </View>
-            ),
-            'default',
-            ()=>{null},
-            'Carregando localização\n\nAguarde...'
-        )
         //tenta pegar a localização
-        try {
+        if(isConnectedNetwork === false){
+            arlterarModal(
+                'load',
+                'map-marker-plus',
+                'Processando pedido...',
+                ()=>(
+                    <View style={[Styles.em_linhaVertical,Styles.w100,getModalStyle('light'),{borderBottomLeftRadius:5,borderBottomRightRadius:5,marginBottom:10}]}>
+                        <ActivityIndicator size={75} color={'blue'}/>
+                        <Text style={[Styles.ft_medium,getModalStyleLabel('light'),{textAlign:'center',marginBottom:25}]}>{'Carregando localização, Por você estar offline\n a precisão pode não ser exata. \n\nAguarde...'}</Text>
+                    </View>
+                ),
+                'default',
+                ()=>{null},
+                'Carregando localização, Por você estar offline\n a precisão pode não ser exata.\n\nAguarde...'
+            )
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 Alert.alert('Permissão negada', 'Permissão para acessar localização foi negada.');
                 return;
             }
-
-            let location = await Location.getCurrentPositionAsync({});
-            setLocation(location);
-            if(location){
-                return {status:'sucesso',code:0,mensagem:'sucesso',location:location};
+            let currentLocation = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.High,
+            });
+            setLocation(currentLocation);
+            if(currentLocation){
+                return {status:'sucesso',code:0,mensagem:'sucesso',location:currentLocation};
             }
             return {status:'error',code:788,mensagem:'Location não carregado!'};
-        } catch (error:any) {
-            return {status:'error',code:785,mensagem:error.message};
+        }else{
+            arlterarModal(
+                'load',
+                'map-marker-plus',
+                'Processando pedido...',
+                ()=>(
+                    <View style={[Styles.em_linhaVertical,Styles.w100,getModalStyle('light'),{borderBottomLeftRadius:5,borderBottomRightRadius:5,marginBottom:10}]}>
+                        <ActivityIndicator size={75} color={'blue'}/>
+                        <Text style={[Styles.ft_medium,getModalStyleLabel('light'),{textAlign:'center',marginBottom:25}]}>{'Carregando localização. \n\nAguarde...'}</Text>
+                    </View>
+                ),
+                'default',
+                ()=>{null},
+                'Carregando localização.\n\nAguarde...'
+            )
+            try {
+                let { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') {
+                    Alert.alert('Permissão negada', 'Permissão para acessar localização foi negada.');
+                    return;
+                }
+
+                let location = await Location.getCurrentPositionAsync({});
+                setLocation(location);
+                if(location){
+                    return {status:'sucesso',code:0,mensagem:'sucesso',location:location};
+                }
+                return {status:'error',code:788,mensagem:'Location não carregado!'};
+            } catch (error:any) {
+                return {status:'error',code:785,mensagem:error.message};
+            }
         }
-        
     }
 //-----------------------------------------------------inicio das funções da imagens da os
     const uploadImages = async (osDados:any,dados:any,loc:string,prof:string,os:string,statusOs:number) => {
         await AlimentarApp();
-        //console.log(imagensAmbiente,imagensEmbalagem,imagensMontado)
-        //setModalVisible(!modalVisible);
-        //console.log('|Imagens embalagem=>',imagensEmbalagem,'|Imagens montado=>',imagensMontado,'|Imagens Ambiente=>',imagensAmbiente)
-        //setMsg('Processando informações da O.S.\n\nAguarde...');
         let formData = new FormData();
         //adiciona as imagens ao formdata
         const addImagesToFormData = (images:any, fieldName:any) => {
             if(images !== null){
-                //console.log('Imagem(ns)=>',images)
                 
                 images.forEach((imageUri:any, index:number) => {
                     if(imageUri.url === undefined){
                         let uriParts = imageUri.split('.');
                         let carimbo = imageUri.dataInicio.replace(/[^\w\s]|_/g, "").replace(/\s+/g, "");
                         let fileType = uriParts[uriParts.length - 1];
-                        //console.log('669=>',uriParts,'\n\nCaminho:=>',imageUri);
                         formData.append('arquvios[]', {
                             uri: imageUri.url,
                             name: `${fieldName.replace('[]','')}_${carimbo}.${fileType}`,
@@ -1177,7 +1314,6 @@ function AuthLoginProvider({children}:any){
                         let uriParts = (imageUri.url).split('.');
                         let carimbo = imageUri.dataInicio.replace(/[^\w\s]|_/g, "").replace(/\s+/g, "");
                         let fileType = uriParts[uriParts.length - 1];
-                        //console.log('669=>',uriParts,'\n\nCaminho:=>',imageUri);
                         formData.append('arquivos[]', {
                             uri: imageUri.url,
                             name: `${fieldName.replace('[]','')}_${carimbo}.${fileType}`,
@@ -1187,7 +1323,6 @@ function AuthLoginProvider({children}:any){
                     
                 });
             }else{
-                //console.log('Erro nas imagens=>')
                 switch (fieldName) {
                     case 'imagensmbalagem[]':
                         navigation.navigate('home os');
@@ -1229,8 +1364,6 @@ function AuthLoginProvider({children}:any){
                     'Content-Type': 'multipart/form-data',
                 },
             })
-            //console.log('Sucesso 695=>',response.data)//response.config.data._parts);
-            //console.log('formData=>',formData.parts_[0].imagensEmbalagem);
             if(response.data[0].status === 'OK' && response.data[0].statusCode === 0){
                     //setModalVisible(false);
                     arlterarModal(
@@ -1266,7 +1399,7 @@ function AuthLoginProvider({children}:any){
                     return {status:'sucesso',code:0,mensagem:'Ordem de serviço finalizada com sucesso!',location:null};
             }else{
                     setModalVisible(false);
-                    return {status:'error',code:914,mensagem:'Erro ao finalizar a ordem de serviço!',location:null};
+                    return {status:'error',code:914,mensagem:'Erro ao finalizar a ordem de serviço!\n\n',location:null};
             }
         } catch (error:any) {
             setModalVisible(false);
@@ -1311,10 +1444,9 @@ function AuthLoginProvider({children}:any){
     }
 
     const adicionarImagemEmbalagem = async (dados:any) => {
-        //console.log('para atualização do status=>',dados)
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: false,
+            allowsEditing: true,
             base64: true,
             quality: 1,
         });
@@ -1398,14 +1530,14 @@ function AuthLoginProvider({children}:any){
     const adicionarImagemAmbiente = async (tipoImagem:any) => {
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: false,
+            allowsEditing: true,
             base64: true,
-            quality: 1,
+            quality: .4,
         });
     
         if (!result.canceled) {
             const coordenadas = await buscarCoordenadas('embalagem',null,1100,0,()=>{null},'');
-            if(coordenadas?.code ===0){
+            if(coordenadas.code ===0){
                 const novaImagem = {url:result.assets[0].uri,location:coordenadas?.location,dataInicio:dataLocal+' '+horaLocal};
                 const novasImagens:any|null = imagensAmbiente ? [...imagensAmbiente, novaImagem] : [novaImagem];
                 setImagensAmbiente(novasImagens);
@@ -1482,9 +1614,9 @@ function AuthLoginProvider({children}:any){
     const adicionarImagemProblema = async (tipoImagem:any) => {
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: false,
+            allowsEditing: true,
             base64: true,
-            quality: 1,
+            quality: .4,
         });
     
         if (!result.canceled) {
@@ -1589,11 +1721,9 @@ function AuthLoginProvider({children}:any){
             await AsyncStorage.removeItem('imagens_embalagem');
             await AsyncStorage.removeItem('imagens_montagem');
             await AsyncStorage.removeItem('imagens_ambiente');
-            //console.log('Sucesso ao remover todas as imagens.');
             carregarTodasImagens();
             return {status:'Sucesso',code:0,retorno:'imagens limpas com sucesso!'};
         } catch (error:any) {
-            console.log('Erro ao remover todas as imagens.');
             return {status:'Erro',code:1562,retorno:error.message};
         }
     }
@@ -1601,9 +1731,9 @@ function AuthLoginProvider({children}:any){
     const adicionarImagemMontagem = async (tipoImagem:any) => {
         let result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.All,
-            allowsEditing: false,
+            allowsEditing: true,
             base64: true,
-            quality: 1,
+            quality: .4,
         });
     
         if (!result.canceled) {
@@ -1692,7 +1822,6 @@ function AuthLoginProvider({children}:any){
                     images.forEach((imageUri:any, index:number) => {
                         let uriParts = imageUri.split('.');
                         let fileType = uriParts[uriParts.length - 1];
-                        //console.log('669=>',uriParts,'\n\nCaminho:=>',imageUri);
                         formData.append(fieldName, {
                         uri: imageUri,
                         name: `${fieldName}.${fileType}`,
@@ -1733,14 +1862,11 @@ function AuthLoginProvider({children}:any){
                     'Content-Type': 'multipart/form-data',
                 },
             }).then((response)=>{
-                //console.log('Retorno do response=>',response.data)
                 return response;
             }).catch((responseError)=>{
-                //console.log('Erro no catch=>',responseError);
                 return responseError;
             })
         } catch (error) {
-            //console.log('Erro no response=>',error)
             return error;
         }
     }
@@ -1758,7 +1884,6 @@ function AuthLoginProvider({children}:any){
         
             // Salva a imagem manipulada na galeria (opcional)
             const savedImage = await manipulateAsync(manipulatedImage.uri);
-            //console.log('Imagem salva na galeria:', savedImage);
         
             return manipulatedImage.uri;
         } catch (error) {
@@ -1777,7 +1902,6 @@ function AuthLoginProvider({children}:any){
 
             // Manipula e salva a imagem (opcional)
             const manipulatedImageUri = await manipulateAndSaveImage(rotatedImageUri);
-            //console.log('Imagem manipulada:', manipulatedImageUri);
 
             const enviarImagens = await enviarImagensFinalizadas('arquivoAss',null,uri);
             // Define a imagem capturada para exibição na interface (opcional)
@@ -1826,7 +1950,6 @@ function AuthLoginProvider({children}:any){
     const rotateImage = async (imageUri: string|any) => {
         try {
             // Realiza a rotação da imagem utilizando expo-image-manipulator
-            //console.log('imagem=>',imageUri);
             
             const manipulatedImage = await manipulateAsync(
             imageUri,
@@ -1835,7 +1958,6 @@ function AuthLoginProvider({children}:any){
             );
             return manipulatedImage.uri;
         } catch (error) {
-            console.log('2970=>',error);
         }
         
     };
@@ -1846,7 +1968,6 @@ function AuthLoginProvider({children}:any){
         const uri = await captureRef(canvasRef, { format: 'jpg', quality: 1 });
         return uri;
         } catch (error) {
-            console.log('2981=>',error);
         }
         
     };
@@ -1914,7 +2035,6 @@ function AuthLoginProvider({children}:any){
                             prioridade:params.prioridade,
                         }
                     }).then((response)=>{
-                        //console.log(response.data);
                     }).catch(()=>{
 
                     })
@@ -1993,7 +2113,6 @@ function AuthLoginProvider({children}:any){
                 }else{
 
                 }
-                //console.log('Retorno do teste=>',response.status);
             }).catch((responseCatch)=>{
 
             })
@@ -2014,15 +2133,12 @@ function AuthLoginProvider({children}:any){
                     filters:perfil,
                 }
             })
-            //console.log('alimentação do app=>',httpAlimentacao,'\nResposta servidor=>',response.data);
             if(response.data[0].status === 'OK' && response.data[0].statusCode === 0){
                 const retorno = response.data[0];
                 setListParceiros(response.data[0].empresas);
                 return {status:'sucesso',code:0,mensagem:'sucesso',retorno:retorno};
             }
-            //console.log('retorno das empresas=>',response)
         } catch (error:any) {
-            //console.log(error)
             return {status:'Erro',code:0,mensagem:error.message,retorno:null};
             
         }
@@ -2041,7 +2157,6 @@ function AuthLoginProvider({children}:any){
                 id_loja:User,
               }
             })
-            console.log('lista de faturamentos=>',response)
             if(response.data[0].status === 'OK' && response.data[0].statusCode ===200){
                 if(response.data[0].faturamento !== null){
                     
@@ -2115,7 +2230,6 @@ function AuthLoginProvider({children}:any){
                 id:idEmpresa
               }
             })
-            //console.log('lista de parceiros=>',response.data[0].parceiros)
             if(response.data[0].parceiros !== null){
                 
                 setParceiros(response.data[0].parceiros)
@@ -2168,7 +2282,6 @@ function AuthLoginProvider({children}:any){
                 dt_fim:data_fim,
               }
             })
-            //console.log('lista de fechamentos=>',response)
             if(response.data[0].fechamentos !== null){
                 
                 setFechamentos_(response.data[0].fechamentos)
@@ -2218,15 +2331,14 @@ function AuthLoginProvider({children}:any){
                 //dados.imagens_caixa.push(imagensEmbalagem);
 
                 // Verificar o resultado
-                //console.log(dados);
                 setListMinhasOs(dados)
                 const retorno = await salvarVariaveis(
                     'listMinhasOs',
-                    'listMonhasOs',
+                    'listMinhasOs',
                     JSON.stringify(dados)
                 )
 
-                if(retorno?.code ===0){
+                if(retorno.code ===0){
                     return {status:'sucesso',code:0,mensagem:'sucesso',retorno:retorno};
                 }else{
                     return {status:'erro',code:2168,mensagem:'erro',retorno:retorno};
@@ -2242,70 +2354,66 @@ function AuthLoginProvider({children}:any){
                     dados.imagens_caixa = dados.imagens_caixa || []; // Garante que é um array
                     dados.imagens_caixa.push(imagensEmbalagem);
                 } catch (error) {
-                    console.log('Erro em: ', 'imagens Caixa');
                 }
 
                 try {
                     dados.imagens_montados = dados.imagens_montados || [];
                     dados.imagens_montados.push(imagensMontado);
                 } catch (error) {
-                    console.log('Erro em: ', 'imagens Montados');
                 }
 
                 try {
                     dados.imagens_ambiente = dados.imagens_ambiente || [];
                     dados.imagens_ambiente.push(imagensAmbiente);
                 } catch (error) {
-                    console.log('Erro em: ', 'imagens Ambiente');
                 }
-
                 // Filtra a OS a ser removida da lista principal
-                let listMinhasOs_ = listMinhasOs || []; // Garante que a lista está inicializada
-                let novaOsList = listMinhasOs_.filter(item => item.os !== dados.os);
 
-                //console.log('Dados=>', dados);
-                //console.log('Nova Lista de OS=>', novaOsList);
-
-                // Atualiza a lista de OS offline e a lista principal
-                try {
-                    let listOffline = listOsOffline || []; // Garante que está inicializado
-                    setListMinhasOs(novaOsList);
-                    listOffline.push(dados);
-                    setListOsOffline(listOffline);
-                    const retornoSave = await salvarVariaveis(
-                        'listMinhasOs',
-                        'listMinhasOs',
-                        JSON.stringify(novaOsList === null || novaOsList === undefined ? '' : novaOsList)
-                    );
-
-                    if (retornoSave?.code === 0) {
-                        const listaOffline = await salvarVariaveis('listOffline','listOffline',JSON.stringify(listOffline));
-
-                        if(listaOffline.code === 0){
-                            const almApp = await AlimentarApp();
-
-                            if (almApp.code === 0) {
-                                return { status: 'sucesso', code: 0, mensagem: 'sucesso', retorno: retornoSave };
-                            } else {
-                                return { status: 'erro', code: 2168, mensagem: 'erro', retorno: retornoSave };
+                console.log('Lista de OS:', listMinhasOs);
+                let listaArray = Array.isArray(listMinhasOs) ? listMinhasOs : [listMinhasOs];
+                if (listaArray !== null && listaArray !== undefined) {
+                    if(Array.isArray(listaArray)){
+                        var listMinhasOs_ = [...listaArray]; // Copia segura do array
+                        console.log('OS a ser removida:', dados.os);
+                        try {
+                            let novaOsList = listMinhasOs_.filter(item => item.os !== dados.os);
+                            console.log('Nova lista de OS após filtro:', novaOsList);
+                    
+                            setListMinhasOs(novaOsList);
+                    
+                            let listOffline = listOsOffline || [];
+                            listOffline.push(dados);
+                            setListOsOffline(listOffline);
+                    
+                            const retornoSave = await salvarVariaveis(
+                                'listMinhasOs',
+                                'listMinhasOs',
+                                JSON.stringify(novaOsList.length === 0 ? '' : novaOsList)
+                            );
+                    
+                            if (retornoSave?.code === 0) {
+                                const listaOffline = await salvarVariaveis('listOffline', 'listOffline', JSON.stringify(listOffline));
+                    
+                                if (listaOffline.code === 0) {
+                                    const almApp = await AlimentarApp();
+                                    if (almApp.code === 0) {
+                                        return { status: 'sucesso', code: 0, mensagem: 'sucesso', retorno: retornoSave };
+                                    }
+                                }
                             }
-                        }else{
                             return { status: 'erro', code: 2168, mensagem: 'erro', retorno: retornoSave };
+                        } catch (error) {
+                            console.error('Erro ao processar:', error);
+                            return { status: 'erro', code: 2168, mensagem: 'erro', retorno: error.message };
                         }
-                    } else {
-                        return { status: 'erro', code: 2168, mensagem: 'erro', retorno: retornoSave };
+                    }else{
+                        console.log('Erro: A lista de OS está vazia ou indefinida.');
+                        return { status: 'erro', code: 2168, mensagem: 'A lista não é um array' };
                     }
-                    
-                } catch (error:any) {
-                    //console.log('Erro em: ', 'setar lista de os offline!\nMais detalhes: ',error.message);
+                } else {
+                    console.log('Erro: A lista de OS está vazia ou indefinida.');
+                    return { status: 'erro', code: 2168, mensagem: 'Não executou o if.' };
                 }
-
-                // Salva as variáveis atualizadas
-                //try {
-                    
-                /*} catch (error) {
-                    console.log('Erro ao salvar variáveis: ', error);
-                }*/
                 break;
         }
     }
@@ -2330,14 +2438,12 @@ function AuthLoginProvider({children}:any){
                 'Iniciando envio de O.S. OFFLINE,\nIsso pode demorar alguns minutos,\n\nAguarde...'
             )
             const element = listOsOffline[index];
-            //console.log('processando lista=>',element);
 
             // Aqui, você envia a OS e espera o retorno da promessa
             const resultado = await enviarOS(element);
 
-            if (resultado.code !== 0) {
-                //console.log('Erro ao enviar OS:', resultado);
-                return { status: 'Erro', code: resultado.code, mensagem: 'Erro', retorno: resultado.retorno };
+            if (resultado?.code !== 0) {
+                return { status: 'Erro', code: resultado?.code, mensagem: 'Erro', retorno: resultado?.retorno };
             }
         }
         return { status: 'sucesso', code: 0, mensagem: 'sucesso', retorno: 'Todas as O.S. foram enviadas com sucesso.' };
@@ -2364,20 +2470,27 @@ function AuthLoginProvider({children}:any){
 
     async function removerOsListMinhasOs(IdOs:number){
         if(IdOs !== null){
-            let lista = listMinhasOs.filter(item => item.os !== IdOs);
+            try {
+                let lista = listMinhasOs.filter(item => item.os !== IdOs);
 
-            const retornoSaveList = await salvarVariaveis('listMinhasOs','listMinhasOs',JSON.stringify(lista));
+                const retornoSaveList = await salvarVariaveis('listMinhasOs','listMinhasOs',JSON.stringify(lista));
 
-            if(retornoSaveList.code ===0){
+                if(retornoSaveList.code === 0){
+                    setLoad(false);
+                    fecharModal('');
+                    return { status: 'Sucesso', code: 0, mensagem: 'Sucesso', retorno: retornoSaveList?.mensagem };
+                    
+                }else{
+                    setLoad(false);
+                    fecharModal('');
+                    return { status: 'Erro', code: 2315, mensagem: 'Erro', retorno: retornoSaveList?.mensagem };
+                }
+            } catch (error:any) {
                 setLoad(false);
                 fecharModal('');
-                return { status: 'Sucesso', code: 0, mensagem: 'Sucesso', retorno: retornoSaveList?.mensagem };
-                
-            }else{
-                setLoad(false);
-                fecharModal('');
-                return { status: 'Erro', code: 2315, mensagem: 'Erro', retorno: retornoSaveList?.mensagem };
+                return { status: 'Erro', code: 2315, mensagem: 'Erro', retorno: error.message };
             }
+            
         }
     }
 
@@ -2395,31 +2508,26 @@ function AuthLoginProvider({children}:any){
                 
                 // Acessando o primeiro item do array interno
                 const detalhesImagemCaixa = primeiroItemCaixa[0];
-                console.log('imagens caixa',detalhesImagemCaixa);
                 
                 // Acessando o primeiro item do array externo
                 const primeiroItemMontado = element.imagens_montados[0];
 
                 // Acessando o primeiro item do array interno
                 const detalhesImagemMontado = primeiroItemMontado[0];
-                console.log('imagens montado',detalhesImagemMontado);
                 
                 // Acessando o primeiro item do array externo
                 const primeiroItemAmbiente = element.imagens_ambiente[0];
 
                 // Acessando o primeiro item do array interno
                 const detalhesImagemAmbiente = primeiroItemAmbiente[0];
-                console.log('imagens ambiente',detalhesImagemAmbiente);
                 const addImagesToFormData = (images:any, fieldName:any) => {
                     if(images !== null){
-                        //console.log('Imagem(ns)=>',images)
                         
                         images.forEach((imageUri:any, index:number) => {
                             if(imageUri.url === undefined){
                                 let uriParts = imageUri.split('.');
                                 let carimbo = imageUri.dataInicio.replace(/[^\w\s]|_/g, "").replace(/\s+/g, "");
                                 let fileType = uriParts[uriParts.length - 1];
-                                //console.log('669=>',uriParts,'\n\nCaminho:=>',imageUri);
                                 formData.append('arquvios[]', {
                                     uri: imageUri.url,
                                     name: `${fieldName.replace('[]','')}_${carimbo}.${fileType}`,
@@ -2429,7 +2537,6 @@ function AuthLoginProvider({children}:any){
                                 let uriParts = (imageUri.url).split('.');
                                 let carimbo = imageUri.dataInicio.replace(/[^\w\s]|_/g, "").replace(/\s+/g, "");
                                 let fileType = uriParts[uriParts.length - 1];
-                                //console.log('669=>',uriParts,'\n\nCaminho:=>',imageUri);
                                 formData.append('arquivos[]', {
                                     uri: imageUri.url,
                                     name: `${fieldName.replace('[]','')}_${carimbo}.${fileType}`,
@@ -2439,7 +2546,6 @@ function AuthLoginProvider({children}:any){
                             
                         });
                     }else{
-                        //console.log('Erro nas imagens=>')
                         switch (fieldName) {
                             case 'imagensmbalagem[]':
                                 navigation.navigate('home os');
@@ -2479,7 +2585,6 @@ function AuthLoginProvider({children}:any){
                         'Content-Type': 'multipart/form-data',
                     },
                 })
-                console.log('retorno da finalização de O.S.=>',response.data);
                 //verifica se foi sucesso ou erro
                 if(response.data[0].status === 'OK' && response.data[0].statusCode === 0){
                     const lpImg = await limparImagens();
@@ -2510,6 +2615,53 @@ function AuthLoginProvider({children}:any){
         });*/
     }
 
+    async function buscarRotas(comando:string,dataDeHoje:any,profissional:any){
+        const retorno = await axios({
+            method:'get',
+            url:httpAlimentacao === null ? Config.configuracoes.pastaProcessos : httpAlimentacao,
+            params:{
+                comando:comando,
+                data:dataDeHoje,
+                profissional:profissional,
+            }
+        });
+        if(retorno.data !== ''){
+          if(retorno.data[0].status === 'OK' && retorno.data[0].statusCode === 200){
+            setListOsDisponiveis(retorno.data[0].dados);
+            return {status:'sucesso',code:0,mensagem:'Rotas lidas com sucesso!',errors:null};
+          }else{
+            
+            return {status:'Erro',code:1,mensagem:'Erro ao ler as rotas!',errors:retorno.data[0]};
+          }
+        }else{
+          return {status:'Erro',code:1,mensagem:'Erro ao ler as rotas!',errors:retorno.data[0]};
+        }
+    }
+
+    async function onlineOffline(comando:string){
+        if(comando === 'offline'){
+            setIsOffline(true);
+
+            const slvVr = await salvarVariaveis('','isOffline','true');
+
+            if(slvVr.code ===0){
+                setLoad(false)
+                setModalVisible(false);
+                return {status:'sucesso',code:0,mensagem:'Você está offline agora!',errors:null};
+            }
+        }else if(comando === 'online'){
+            setIsOffline(false);
+
+            const slvVr = await salvarVariaveis('','isOffline','false');
+
+            if(slvVr.code ===0){
+                setLoad(false)
+                setModalVisible(false);    
+                return {status:'sucesso',code:0,mensagem:'Você está online novamente!',errors:null};
+            }
+        }
+    }
+
     return(
         <AuthLogin.Provider value={{
             //variaveis
@@ -2518,7 +2670,7 @@ function AuthLoginProvider({children}:any){
             nomeCliente,nf,ordemServico,osInicada,location,imagensEmbalagem,imagensMontado,imagensAmbiente,dataLocal,horaLocal,capturedImage,
             canvasRef,currentPath,paths,isConnectedNetwork,tokenNotification,notificationsCount,isConfigured,isOs,tela,isUser,visibleSnackBar,
             dataLoaded,montantePgmto,itemsFat,qtdOs,totalFat,parceiros,fechamentos_,uniqueId,imagensProblema,appIsValid,appValidationArray,
-            typeConn,
+            typeConn,configApp,conf,isOffline,asyncLoad,
             //funções
             setLoad,setModalVisible,setModalId,setIconeModal,setTitleModal,setConteudoModal,setActionsModal,setStylesModal,getModalStyle,
             apresentaModal,getModalStyleLabel,fecharModal,gerarIdUnico,AlimentarApp,getModalStyleLabelAlert,salvarVariaveis,setPesquiza,
@@ -2528,6 +2680,7 @@ function AuthLoginProvider({children}:any){
             removerImagemMontado, setCapturedImage,setPaths,onTouch,saveCanvasAsImage,limparImagens,logof,setTokenNotification,sendNotification,testeConfig,buscarNotificacoes,
             setNotificationsCount,IniciarOs,OsIniciada,executarAcao,buscarEmpresas,verificarConexao,setVisibleSnackBar,setDataLoaded,cacheClear,montanteLoja,setMontantePgmto,setTela,
             faturamento,parceiroSearch,fechamentos,validarApp,adicionarImagemProblema,removerImagemProblema,IniciarOsOffline,enviarOsOfflines,removerOsOffline,removerOsListMinhasOs,
+            buscarRotas,setItemsFat,Config_APP,setConfigApp,setConf,setIsOffline,onlineOffline,getModalStyleBorder,buscarConfig,setAsyncLoad,
         }}>
             {children}
         </AuthLogin.Provider>
@@ -2539,7 +2692,6 @@ export default AuthLoginProvider;
     const canvasRef = useRef(null);
     const currentPath = useRef<SkPath|null>(null)
     const [paths,setPaths] = useState<SkPath[]>([])
-    console.log('Dados da os=>',osInicada.dadosOs.dadosOs.dadosOs);
     const onTouch = useTouchHandler({
         onStart:({x,y})=>{
             currentPath.current = Skia.Path.Make();

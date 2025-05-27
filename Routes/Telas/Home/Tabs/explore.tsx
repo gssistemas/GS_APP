@@ -17,7 +17,7 @@ export default function Explorer({}:any) {
   const [pesq,setPesq] = useState('');
 
   useEffect(()=>{
-    buscarEmpresas('buscarEmpresas','all') && console.log(listParceiros)
+    buscarEmpresas('buscarEmpresas','all');// && console.log(listParceiros)
   },[])
   try {
   return (
@@ -30,7 +30,7 @@ export default function Explorer({}:any) {
       <ThemedText>{'Este app inclui várias empresas parceiras, Escolha a qual você presta serviço.\n'}<ThemedText type="defaultSemiBold" style={[{color:'red'}]}>Nota:{'\nIsso voçê fará apenas no primeiro acesso ou quando sair do app.'}</ThemedText></ThemedText>
       <View style={[{flexDirection:'row',alignItems:'center',paddingHorizontal:'2.5%',elevation:5,backgroundColor:'#FFFFFF',height:45,borderRadius:5}]}>
         <Ionicons name='magnify' size={25} color={'#999999'}/>
-        <TextInput placeholder='Não encontrou? pesquize aqui...' style={[{paddingHorizontal:5,height:'100%',minWidth:'82.8%',maxWidth:'82.8%'}]} onChangeText={(text)=>{console.log(setPesq(text))}}/>
+        <TextInput placeholder='Não encontrou? pesquize aqui...' style={[{paddingHorizontal:5,height:'100%',minWidth:'82.8%',maxWidth:'82.8%'}]} onChangeText={(text)=>{setPesq(text)}}/>
         <TouchableOpacity style={[{backgroundColor:'#483D8B',height:'100%',paddingHorizontal:8,borderTopRightRadius:5,borderBottomRightRadius:5,alignItems:'center',justifyContent:'center'}]}
           onPress={()=>{searchByTitle(listParceiros, pesq)}}
         >
@@ -65,7 +65,7 @@ export default function Explorer({}:any) {
               listParceiros !== undefined &&
 
               listParceiros.map((parc:any,i:number)=>{
-                console.log('61=>',parc)
+                //console.log('61=>',parc)
                 return(
                   <Collapsible key={parc.id} title={parc.title}>
                       <TouchableOpacity onPress={()=>{navigation.navigate(parc.onPress,{loja:parc.title,clienteid:parc.id})}} style={[Styles.em_linhaHorizontal,Styles.btn,{paddingHorizontal:0,paddingLeft:-1,paddingVertical:0,width:'100%',flexDirection:'row',justifyContent:'space-between',alignItems:'center'}]}>

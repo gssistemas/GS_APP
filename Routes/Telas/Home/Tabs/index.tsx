@@ -9,33 +9,33 @@ import { ThemedView } from '../../../Components/ThemedView';
 
 export default function HomeScreen() {
   const animations = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+  
   useEffect(()=>{
     setTimeout(()=>{
-const createAnimation = (index:number) => {
-      //Animated.loop(
-        return Animated.sequence([
-              Animated.timing(animations[index], {
-                  toValue: 150,
-                  duration: 1000,
-                  useNativeDriver: true,
-              }),
-              Animated.timing(animations[index], {
-                  toValue: 0,
-                  duration: 1000,
-                  useNativeDriver: true,
-              }),
-        ]);
-      //)
-    };
-    const startAnimation = () => {
-        createAnimation(0).start();
-        setTimeout(() => createAnimation(1).start(), 250); // Start next animation when the first one is halfway
-        setTimeout(() => createAnimation(2).start(), 500); // Start third animation when the second one is halfway
-    };
+      const createAnimation = (index:number) => {
+        //Animated.loop(
+          return Animated.sequence([
+                Animated.timing(animations[index], {
+                    toValue: 150,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(animations[index], {
+                    toValue: 0,
+                    duration: 1000,
+                    useNativeDriver: true,
+                }),
+          ]);
+        //)
+      };
+      const startAnimation = () => {
+          createAnimation(0).start();
+          setTimeout(() => createAnimation(1).start(), 250); // Start next animation when the first one is halfway
+          setTimeout(() => createAnimation(2).start(), 500); // Start third animation when the second one is halfway
+      };
       startAnimation();
-    },10000)
-    
-  },[])
+    },10000);
+  },[]);
 
   try {
     return (

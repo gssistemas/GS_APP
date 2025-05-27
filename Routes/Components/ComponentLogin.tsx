@@ -16,7 +16,7 @@ export default function LoginComponent({route}:any){
     const [pass,setPass] = useState(senha);
     const [blink, setBlink] = useState(false);
     const [animation] = useState(new Animated.Value(1));
-    console.log(isConnectedNetwork,route)
+    //console.log(isConnectedNetwork,route)
 
     const blinkView = () => {
         setBlink(true);
@@ -112,7 +112,7 @@ export default function LoginComponent({route}:any){
                                 onPress={()=>{
                                     setLoad(true);
                                     blinkView()
-                                    login({comando:'login',email:Em,senha:pass,token:tokenNotification,idEmpresa:route.params.clienteid});
+                                    login({comando:'login',email:Em,senha:pass,token:tokenNotification,idEmpresa:route.params.clienteid,AppName:'Aplicativo GS APP'});
                                 }}
                             >
                                 {

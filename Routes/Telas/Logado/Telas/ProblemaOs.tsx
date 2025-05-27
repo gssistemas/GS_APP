@@ -1,7 +1,7 @@
 import { useContext, useState } from 'react';
-import { ScrollView, TextInput, TouchableOpacity, View, Dimensions,Image} from 'react-native';
+import { ScrollView, TextInput, TouchableOpacity, View, Dimensions,Image, Alert} from 'react-native';
 import { AuthLogin } from '../../../../assets/Contexts/AuthLogin';
-import {RadioButton,Text} from 'react-native-paper';
+import {ActivityIndicator, RadioButton,Text} from 'react-native-paper';
 import { Styles } from '../../../../assets/Styles/Styles';
 import {useNavigation} from '@react-navigation/native';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
@@ -9,18 +9,31 @@ import ParallaxScrollView from '../../../Components/ParallaxScrollView';
 import { ThemedView } from '../../../Components/ThemedView';
 import { ThemedText } from '../../../Components/ThemedText';
 import { useTheme } from '../../../../assets/Styles/ThemeContext';
+import Config from '../../../../assets/Config/Config.json';
+import axios from 'axios';
 const {width,height} = Dimensions.get('screen');
 
 export default function ProblemaOs({route}:any) {
     const {theme} = useTheme()
     const navigation = useNavigation();
-    const {usuario,osInicada,apresentaModal,buscarCoordenadas,adicionarImagemProblema,removerImagemProblema,totalMontagem,montanteLoja,IniciarOs,OsIniciada,fecharModal,salvarVariaveis,imagensProblema,getModalStyleLabel,montantePgmto} = useContext<any>(AuthLogin);
+    const {usuario,osInicada,apresentaModal,imagens_problemas,buscarCoordenadas,adicionarImagemProblema,removerImagemProblema,totalMontagem,montanteLoja,IniciarOs,OsIniciada,fecharModal,salvarVariaveis,imagensProblema,getModalStyleLabel,montantePgmto} = useContext<any>(AuthLogin);
     const [value, setValue] = useState('');
-    console.log(osInicada);
+    const [checkProblem,setCheckProblem] = useState('');
+    const [description_problem,setDescription_problem] = useState('');
+    const [motivo,setMotivo] = useState('');
+    //console.log('Ordem de serviço iniciada=>',osInicada.dadosOs.nota_fiscal,'\nUsuário',usuario.id_login[0].id);
 
     async function iniciar(){
+        if(imagensProblema === undefined|| imagensProblema.length ===0){
+            Alert.alert('ATENÇÃO!!!','Não recomendamos que a resolução de problemas seja enviadas sem imagens, É necessário pelo menos uma imagem do problema.');
+        }else{
+            sendProblem();
+        }
+    }
+
+    async function relatar() {
         const retorno = await buscarCoordenadas('os iniciada',osInicada.dadosOs,2000,osInicada.dadosOs.os,'inicio trabalho','inicio trabalho','iniciarOs');
-            if(retorno.code === 0){
+        if(retorno.code === 0){
                 const iniOs = await IniciarOs('iniciarOs',retorno.location.coords.latitude+','+retorno.location.coords.longitude,usuario.id_user,osInicada.dadosOs,2000,osInicada.dadosOs.os,'os iniciada','');
 
                 if(iniOs.code === 0){
@@ -30,7 +43,7 @@ export default function ProblemaOs({route}:any) {
                         const OsIni = await OsIniciada('OsIniciada','OsIniciada','');
 
                         if(OsIni.code ===0){
-                            console.log('os iniciada=>',OsIni);
+                            //console.log('os iniciada=>',OsIni);
                             //comando:string,param: any|Function|ReactElement|ReactNode|null,param_2:any|Function|ReactElement|ReactNode|null,tela:string
                             //setTimeout(() => {
                                 navigation.reset({
@@ -81,8 +94,162 @@ export default function ProblemaOs({route}:any) {
                         );
                     }
                 }
+        }
+    }
+
+    async function sendProblem(){
+        apresentaModal(
+            'dialog',
+            'upload-multiple',
+            'Processando',
+            ()=>(
+                <View style={[Styles.em_linhaVertical,Styles.w100]}>
+                    <ThemedText type='title' style={[Styles.lbllight,{marginBottom:15}]}>Um momento!</ThemedText>
+                    <ActivityIndicator size={75} color='#000000' style={[{marginBottom:15}]}/>
+                    <ThemedText type='subtitle' style={[Styles.lbllight,{fontSize:14,marginBottom:15,textAlign:'center'}]}>{'Processando informações\n\nAguarde...'}</ThemedText>
+                </View>
+            ),
+            'default',
+            ()=>{
+                null
             }
-        
+        );
+        let formData = new FormData();
+
+        const addImagesToFormData = (images:any, fieldName:any) => {
+            //console.log('imagens do problema=>',images)
+            
+            images.forEach((imageUri:any, index:number) => {
+                console.log(imageUri.url);
+                let uriParts = imageUri.url.split('.');
+                let carimbo = imageUri.dataInicio.replace(/[^\w\s]|_/g, "").replace(/\s+/g, "");
+                let fileType = uriParts[uriParts.length - 1];
+                //console.log('669=>',uriParts,'\n\nCaminho:=>',imageUri);
+                formData.append('imagensProblema[]', {
+                    uri: imageUri.url,
+                    name: `${fieldName.replace('[]','')}_${carimbo}.${fileType}`,
+                    type: `image/${fileType}`,
+                });
+            });
+        }
+        formData.append('comando','enviarImagensProblema');
+        formData.append('id_empresa',osInicada.dadosOs.filial[0].id);
+        formData.append('user_id',usuario.id_login[0].id);
+        formData.append('num_os',osInicada.dadosOs.nota_fiscal);
+        formData.append('chave_problema',value);
+        formData.append('descricao_problema',description_problem+motivo);
+        addImagesToFormData(imagensProblema, 'imagensProblema');
+        /*formData.append('imagensProblema',{
+            uri: images,
+            name: `imgProblems`,
+            type: `image/jpg`,
+        });*/
+
+        const response = await axios.post(Config.configuracoes.pastaProcessos, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        if(response.data[0].status === 'OK'){
+            if(response.data[0].statusCode === 200){
+                if(response.data[0].codeMensagem === 0){
+                    apresentaModal(
+                        'success',
+                        'check-circle',
+                        'Sucesso',
+                        ()=>(
+                            <View style={[Styles.em_linhaVertical,Styles.w100]}>
+                                <ThemedText type='title' style={[getModalStyleLabel('success'),{marginBottom:15}]}>Sucesso!</ThemedText>
+                                <MaterialCommunityIcons name='check-circle' size={75} style={[getModalStyleLabel('success'),{marginBottom:15}]}/>
+                                <ThemedText type='subtitle' style={[getModalStyleLabel('success'),{marginBottom:15,textAlign:'center'}]}>{response.data[0].statusMensagem}</ThemedText>
+                            </View>
+                        ),
+                        'default',
+                        ()=>{
+                            return(
+                                <>
+                                    
+                                    <TouchableOpacity style={[Styles.btn,Styles.success,Styles.em_linhaHorizontal,Styles.w100,Styles.btnDialog,Styles.btnDialog,{borderBottomLeftRadius:5,borderBottomRightRadius:5}]}
+                                        onPress={()=>{
+                                            fecharModal('');
+                                        }}
+                                    >
+                                        <Text style={[Styles.ft_regular,Styles.lblsuccess]}>Continuar</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )
+                        }
+                    );
+                    setTimeout(() => {
+                        relatar();
+                    }, 2000);
+                }else{
+                    apresentaModal(
+                        'error',
+                        'alert-circle',
+                        'Erro',
+                        ()=>(
+                            <View style={[Styles.em_linhaVertical,Styles.w100]}>
+                                <ThemedText type='title' style={[getModalStyleLabel('danger'),{marginBottom:15}]}>Erro no processamento!</ThemedText>
+                                <MaterialCommunityIcons name='alert-circle' size={75} style={[getModalStyleLabel('danger'),{marginBottom:15}]}/>
+                                <ThemedText type='subtitle' style={[getModalStyleLabel('danger'),{fontSize:14,marginBottom:15,textAlign:'center'}]}>{response.data[0].codeMensagem+' - '+response.data[0].statusMensagem}</ThemedText>
+                            </View>
+                        ),
+                        'default',
+                        ()=>{
+                            return(
+                                <>
+                                    
+                                    <TouchableOpacity style={[Styles.btn,Styles.light,Styles.em_linhaHorizontal,Styles.w100,Styles.btnDialog,Styles.btnDialogcentered,{borderBottomLeftRadius:5,borderBottomRightRadius:5}]}
+                                        onPress={()=>{
+                                            fecharModal('');
+                                        }}
+                                    >
+                                        <Text style={[Styles.ft_regular,Styles.lbllight]}>OK!</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )
+                        }
+                    );
+                }
+            }
+        }
+    }
+
+    function verificarCase(valor:string){
+        switch (valor) {
+            case '0':
+                setDescription_problem('Montagem recusada - (Produto ja montado)')
+                break;
+            case '1':
+                setDescription_problem('Montador não atendido');
+                break;
+            case '2':
+                setDescription_problem('Cliente não se encontra');
+                break;
+            case '3':
+                setDescription_problem('Peça danificada - (Impossível montar)');
+                break;
+            case '4':
+                setDescription_problem('Endereço não encontrado');
+                break;
+            case '5':
+                setDescription_problem('Tonalidade de cor diferente');
+                break;
+            case '6':
+                setDescription_problem('Produto divergente')
+                break;
+            case '7':
+                setDescription_problem('Endereço insuficiente')
+                break;
+            case '8':
+                setDescription_problem('Ninguém para atender o profissional');
+                break;
+            case '9':
+                setDescription_problem('Outro(s) motivo(s) - ');
+                break;
+        }
     }
     try {
         return (
@@ -244,7 +411,7 @@ export default function ProblemaOs({route}:any) {
                                                             </TouchableOpacity>
                                                             <TouchableOpacity style={[Styles.btn,Styles.success,Styles.em_linhaHorizontal,Styles.w33,Styles.btnDialog,Styles.btnDialogRight,{}]}
                                                                 onPress={()=>{
-                                                                    console.log(route.params.dadosOs)//
+                                                                    //console.log(route.params.dadosOs)//
                                                                     iniciar()
                                                                 }}
                                                             >
@@ -265,46 +432,44 @@ export default function ProblemaOs({route}:any) {
                         <Text style={[Styles.ft_medium,{fontSize:16}]}>Selecione o problema encontrado.</Text>
                     </View>
                     <View style={[Styles.w95,Styles.em_linhaHorizontal,{justifyContent:'flex-start',marginTop:10,borderWidth:1,borderColor:'#999',backgroundColor:'#FFF',elevation:2,borderRadius:8}]}>
-                        <RadioButton.Group onValueChange={newValue => setValue(newValue)} value={value}>
+                        <RadioButton.Group onValueChange={newValue => {setValue(newValue),verificarCase(newValue)}} value={value}>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="0" /><Text style={[Styles.ft_regular]}>Montagem recusada - (Produto ja montado)</Text>
+                                <RadioButton value="0"/><Text style={[Styles.ft_regular]}>Montagem recusada - (Produto ja montado)</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="1" /><Text style={[Styles.ft_regular]}>Montador não atendido</Text>
+                                <RadioButton value="1"/><Text style={[Styles.ft_regular]}>Montador não atendido</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="2" /><Text style={[Styles.ft_regular]}>Cliente não se encontra</Text>
+                                <RadioButton value="2"/><Text style={[Styles.ft_regular]}>Cliente não se encontra</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="3" /><Text style={[Styles.ft_regular]}>Peça danificada - (Impossível montar)</Text>
+                                <RadioButton value="3"/><Text style={[Styles.ft_regular]}>Peça danificada - (Impossível montar)</Text>
+                            </View>
+                            <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
+                                <RadioButton value="4"/><Text style={[Styles.ft_regular]}>Endereço não encontrado</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="4" /><Text style={[Styles.ft_regular]}>Endereço não encontrado</Text>
+                                <RadioButton value="5"/><Text style={[Styles.ft_regular]}>Tonalidade de cor diferente</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="5" /><Text style={[Styles.ft_regular]}>Tonalidade de cor diferente</Text>
+                                <RadioButton value="6"/><Text style={[Styles.ft_regular]}>Produto divergente</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="6" /><Text style={[Styles.ft_regular]}>Produto divergente</Text>
+                                <RadioButton value="7"/><Text style={[Styles.ft_regular]}>Endereço insuficiente</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="7" /><Text style={[Styles.ft_regular]}>Endereço insuficiente</Text>
+                                <RadioButton value="8"/><Text style={[Styles.ft_regular]}>Ninguém para atender o profissional</Text>
                                 
                             </View>
                             <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="8" /><Text style={[Styles.ft_regular]}>Ninguém para atender o profissional</Text>
-                                
-                            </View>
-                            <View style={[Styles.w100,Styles.em_linhaHorizontal,{justifyContent:'flex-start'}]}>
-                                <RadioButton value="9" /><Text style={[Styles.ft_regular]}>Outro motivo...</Text>
-                                
+                                <RadioButton value="9"/><Text style={[Styles.ft_regular]}>Outro motivo...</Text>
                             </View>
                         </RadioButton.Group>
                     </View>
@@ -330,7 +495,7 @@ export default function ProblemaOs({route}:any) {
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={[Styles.w95,{marginTop:10,height:'auto',borderWidth:1,borderColor:'#999',backgroundColor:'#FFF',elevation:2,borderRadius:8}]}>
                             {
                                 imagensProblema.map((img:any,i:number)=>{
-                                    console.log(img)
+                                    //console.log(img)
                                     return(
                                         <ThemedView key={i} style={[{marginHorizontal:5,marginVertical:10,elevation:5,borderRadius:4,padding:2}]}>
                                             <Image source={{uri:img.url}} style={[{width:100,height:100,resizeMode:'stretch',backgroundColor:'#FFF',borderRadius:4}]}/>
@@ -354,7 +519,7 @@ export default function ProblemaOs({route}:any) {
                             </TouchableOpacity>
                         </ScrollView>
                     }
-                    <TextInput multiline={true} placeholder='Adicione uma descrição...' style={[Styles.input,Styles.w95,{}]}/>
+                    <TextInput multiline={true} placeholder='Adicione uma descrição...' style={[Styles.input,Styles.w95,{}]} defaultValue={motivo} value={motivo} onChangeText={(problem)=>{setMotivo(problem)}}/>
                     <View style={[Styles.w95,Styles.em_linhaHorizontal,{justifyContent:'flex-start',marginTop:10,borderWidth:1,borderColor:'#999',backgroundColor:'#FFF',elevation:2,borderRadius:10,paddingVertical:10,paddingHorizontal:5}]}>
                         <TouchableOpacity style={[Styles.w100,Styles.em_linhaHorizontal,Styles.btn,Styles.primary]}
                             onPress={()=>{
