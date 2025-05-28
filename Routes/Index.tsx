@@ -129,7 +129,7 @@ export default function Routes(){
     };
 
     useEffect(()=> {
-        validationApp();
+        async ()=> validationApp();
         async function notificationsLoad(){
           notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
             setNotification(notification);

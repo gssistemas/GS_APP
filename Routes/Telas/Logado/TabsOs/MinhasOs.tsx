@@ -52,14 +52,14 @@ export default function MinhasOs({navigation}:any) {
       //verifica se existe osOffline
       if(listOsOffline === null || listOsOffline.length === 0){
         const os = await buscarOs('buscarOs',nf,dataInicial,dataFinal,nomeCliente,ordemServico,usuario.id_login[0].id,1200);
-        console.warn('retorno da lista=>',os);
+        //console.warn('retorno da lista=>',os);
         if(os.code === 0){
           fecharModal('');
           setModalVisible(false);
           setAsyncLoad(true);
         }
       }else if(listOsOffline !== null && listOsOffline.length > 0){
-        console.warn('Lista offline=>',listOsOffline)
+        //console.warn('Lista offline=>',listOsOffline)
         fecharModal('');
         setModalVisible(false);
         setAsyncLoad(true);
