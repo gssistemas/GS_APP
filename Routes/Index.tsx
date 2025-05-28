@@ -98,6 +98,7 @@ export default function Routes(){
     const [statusLoad,setStatusLoad] = useState<boolean>(false);
     const [errorMsg, setError] = useState<null | undefined | any>(null);
     const [validating, setValidating] = useState(false);
+    const [modeOffline,setModeOffline] = useState<boolean>(false);
 
     async function updateTokenNotification(token_:any){
       const response = await axios({
@@ -323,20 +324,24 @@ export default function Routes(){
     async function validationApp() {
       const vrfConn = await verificarConexao();
       console.log('Status da conexão=>', vrfConn)
-      if (vrfConn.code === 0) {
-          const licenca = await validarApp(uniqueId)
-          console.log('retorno=>',licenca)
-          if (licenca.code === 0) {
-              setError(licenca);
-              setValidating(false);
-              console.log('ok=>', licenca);
-          } else {
-              setError(licenca);
-              setValidating(false);
-              console.log('Erro=>', licenca);
-          }
-      } else {
-          setError(vrfConn);
+      if(vrfConn.mensagem === 'Usando modo Offline'){
+        setModeOffline(true);
+      }else{
+        if (vrfConn.code === 0) {
+            const licenca = await validarApp(uniqueId)
+            console.log('retorno=>',licenca)
+            if (licenca.code === 0) {
+                setError(licenca);
+                setValidating(false);
+                console.log('ok=>', licenca);
+            } else {
+                setError(licenca);
+                setValidating(false);
+                console.log('Erro=>', licenca);
+            }
+        } else {
+            setError(vrfConn);
+        }
       }
   }
 
@@ -494,6 +499,13 @@ export default function Routes(){
               {
                 appIsValid === false && 
                 <View style={[getModalStyle('danger'),{position:'absolute',top:0,left:0,right:0,bottom:0,flex:1,alignItems:'center',justifyContent:'center'}]}>
+                  {
+                    modeOffline === true &&
+                    <>
+                      <MaterialCommunityIcons name='wifi-off' size={75} style={[Styles.lbldanger,Styles.mr_5,{marginBottom:20}]}/>
+                      <Text style={[getModalStyleLabel('danger'),Styles.ft_bold,{fontSize:24,textAlign:'center'}]}>{'Você está no modo offline!\n\nPara validar o app, você precisa estar online.'}</Text>
+                    </>
+                  }
                   <MaterialCommunityIcons name='shield-remove' size={75} style={[Styles.lblsuccess,Styles.mr_5,{marginBottom:20}]}/>
                   <Text style={[getModalStyleLabel('danger'),Styles.ft_bold,{fontSize:24,textAlign:'center'}]}>{'Erro na validação do app!\n\nSua chave parece ser inválida ou expirada.\nEntre em contato pelo telefone\n(43) 98855-9582, \nou clique no botão abaixo para validar.'}</Text>
                   <TouchableOpacity style={[Styles.em_linhaHorizontal,Styles.btn,Styles.success,Styles.w95]}

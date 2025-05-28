@@ -201,29 +201,35 @@ function AuthLoginProvider({children}:any){
         //try {
             // Obtém o estado da conexão de rede
             //const alApp = await AlimentarApp();
-
-            if(isOffline === true){
-                fecharModal('');
-                setTypeConn('mobile');
-                setModalVisible(false);
-                setIsConectedNetwork(false);
-                return { status: 'Erro', code: 149, mensagem: 'Offline', retorno: [{conectado:false,tipo:'mobile'}] };
+            const itsOffline = await AsyncStorage.getItem('isOffline');
+            if(itsOffline === null || itsOffline === 'false'){
+                setIsOffline(false);
             }else{
-                const state = await NetInfo.fetch();
-                setIsConectedNetwork(state.isConnected);
-                // Retorna o status com base na conexão de rede
-                if (isConnectedNetwork === true) {
+                setIsOffline(true);
+            }
+            const state = await NetInfo.fetch();
+            setIsConectedNetwork(state.isConnected);
+            //console.log('Estado da conexão:', state.isConnected,'modo offline->',itsOffline);
+            if(state.isConnected){
+                if(isOffline === true){
                     fecharModal('');
+                    setTypeConn('mobile');
+                    setModalVisible(false);
+                    setIsConectedNetwork(false);
+                    return { status: 'Erro', code: 210, mensagem: 'Usando modo Offline', retorno: [{conectado:false,tipo:'mobile'}] };
+                }else{
+                    fecharModal('');
+                    setTypeConn('mobile');
                     setTypeConn(state.type);
                     setModalVisible(false);
-                    return { status: 'sucesso', code: 0, mensagem: 'Conectado', retorno: [{conectado:isConnectedNetwork,tipo:state.type}] };
-                } else {
-                    fecharModal('');
-                    setTypeConn(state.type);
-                    setModalVisible(false);
-                    //setTypeConn('mobile');
-                    return { status: 'Erro', code: 149, mensagem: 'Offline', retorno: [{conectado:false,tipo:state.type}] };
+                    return { status: 'sucesso', code: 0, mensagem: 'Conectado', retorno: [{conectado:true,tipo:state.type}] };
                 }
+            }else{
+                fecharModal('');
+                setTypeConn(state.type);
+                setModalVisible(false);
+                //setTypeConn('mobile');
+                return { status: 'Erro', code: 225, mensagem: 'Offline', retorno: [{conectado:false,tipo:state.type}] };
             }
         /*} catch (error) {
             console.error('Erro ao verificar a conexão:', error);
@@ -350,7 +356,7 @@ function AuthLoginProvider({children}:any){
             const os = await AsyncStorage.getItem('listMinhasOs');
             const unq = await AsyncStorage.getItem('idApp');
             const lstOff = await AsyncStorage.getItem('listOffline');
-            const itsOnlineOffline = await AsyncStorage.getItem('isOffline');configApp
+            const itsOnlineOffline = await AsyncStorage.getItem('isOffline');//configApp
             const jsonConfig = await AsyncStorage.getItem('configApp');
             //verifica se existe um lista de O.S. offline
             
@@ -2688,22 +2694,3 @@ function AuthLoginProvider({children}:any){
 }
 
 export default AuthLoginProvider;
-/*
-    const canvasRef = useRef(null);
-    const currentPath = useRef<SkPath|null>(null)
-    const [paths,setPaths] = useState<SkPath[]>([])
-    const onTouch = useTouchHandler({
-        onStart:({x,y})=>{
-            currentPath.current = Skia.Path.Make();
-            currentPath.current.moveTo(x,y);
-        },
-        onActive:({x,y})=>{
-            currentPath.current?.lineTo(x,y)
-        },
-        onEnd:()=>{
-            //if(!currentPath.current) return;
-            setPaths(values=> values.concat(currentPath.current!));
-            currentPath.current = null;
-        }
-    })
-*/
