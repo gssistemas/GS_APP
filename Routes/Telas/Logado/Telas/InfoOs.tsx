@@ -49,7 +49,7 @@ export default function InfoOs({route,navigation}:any) {
         }else{
             const config = await buscarConfig(route.params.dadosOs.filial[0].id);
 
-            if(config.code === 0){
+            if(config.code !== undefined && config.code === 0){
                 console.log('configurações da empresa=>',config.retorno);
                 ToastAndroid.show('Configurações atualizadas com sucesso!',ToastAndroid.TOP);
                 setLoadAsync(true)
@@ -145,6 +145,7 @@ export default function InfoOs({route,navigation}:any) {
                     os:ordemServico_,
                     prof:usr,
                     status:status,
+                    isApp:Config.configuracoes.isApp
                 }
             });
 

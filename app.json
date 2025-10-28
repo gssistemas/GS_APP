@@ -21,7 +21,6 @@
       },
       "package": "com.gsapp.com.br.GS_APP",
       "versionCode": 20,
-      "useNextNotificationsApi": true,
       "googleServicesFile": "./google-services.json",
       "config":{
         "googleMaps":{

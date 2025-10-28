@@ -1,13 +1,14 @@
 {
     "configuracoes": {
         "pathPadrao":"https://gsapp.com.br",
-        "pastaProcessos":"https://gsapp.com.br/app/processos_app.php",
+        "pastaProcessos":"https://gsapp.com.br/src/pages/processos_app.php",
         "cor_base":"#228B22",
         "cor_fonte_base":"#FFFFFF",
         "icone_padrao":"../icon.png",
         "proprietario":"GS APP",
         "desenvolvedor":"Guilherme santos",
         "release":"220125",
+        "isApp":"true",
         "notas":"-Verificação de chaves,Correção de funções na Ordens de Serviço,Correção da finalização de O.S.,Imagens das finalizações em tamanho menor e envio com qualquer rede de dados.,Novas respostas prontas para enviar ao cliente.,Configurações de busca de Ordens de serviços padronizadas de acordo com o usuário logado. Não será mais possível carregar todas as Ordens de serviços com apenas um usuário.,Corrigido problema na localização offline.,*Registro do app para teste é de 15 dias será necessário possuir a chave de ativação fornecida pela empresa no momento da integração."
     }
 }

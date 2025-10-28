@@ -8,10 +8,11 @@ import { HelloWave } from "./HelloWave";
 import { AuthLogin } from "../../assets/Contexts/AuthLogin";
 import { Styles } from "../../assets/Styles/Styles";
 import {useNavigation} from '@react-navigation/native';
+import Config from '../../assets/Config/Config.json';
 
 export default function LoginComponent({route}:any){
     const navigation = useNavigation();
-    const {fecharModal,apresentaModal,usuario,email,senha,setarProps,login,load,setLoad,salvarVariaveis,isConnectedNetwork,tokenNotification} = useContext<any>(AuthLogin);
+    const {fecharModal,apresentaModal,usuario,email,Base64,senha,setarProps,login,load,setLoad,salvarVariaveis,isConnectedNetwork,tokenNotification} = useContext<any>(AuthLogin);
     const [Em,setEm] = useState(email);
     const [pass,setPass] = useState(senha);
     const [blink, setBlink] = useState(false);
@@ -112,7 +113,7 @@ export default function LoginComponent({route}:any){
                                 onPress={()=>{
                                     setLoad(true);
                                     blinkView()
-                                    login({comando:'login',email:Em,senha:pass,token:tokenNotification,idEmpresa:route.params.clienteid,AppName:'Aplicativo GS APP'});
+                                    login({comando:'login',email:Em,senha:pass,token:tokenNotification,idEmpresa:route.params.clienteid,AppName:'Aplicativo GS APP',isApp:Config.configuracoes.isApp});
                                 }}
                             >
                                 {

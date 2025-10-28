@@ -155,13 +155,15 @@ export default function Assinatura({route,navigation}:any) {
             formData.append('location',JSON.stringify(localizacao));
             formData.append('dadosOs',JSON.stringify(osInicada));
             formData.append('profissional',usuario.id_login[0].id);
+            formData.append('isApp',Config.configuracoes.isApp);
 
             const response = await axios.post(Config.configuracoes.pastaProcessos, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             })
-            
+            console.log('response 164=>',response);
+            console.log('formData enviado=>',formData);
             if(response.data[0].status === 'OK' && response.data[0].statusCode ===200){
                 console.log('retorno do envio da assinatura=>',response.data[0]);
                 return {status:'sucesso',code:0,mensagem:'sucesso'};
@@ -170,7 +172,7 @@ export default function Assinatura({route,navigation}:any) {
             }
         } catch (error:any) {
             //console.log('Erro no response=>',error)
-            return {status:'erro',code:104,mensagem:error.message};
+            return {status:'erro',code:104,mensagem:error.message+' - na linha 173'};
         }
     }
     // Função para manipular a imagem (opcional: salvar na galeria)
@@ -517,7 +519,7 @@ export default function Assinatura({route,navigation}:any) {
             );
         }
     } catch (error) {
-        console.log(error);
+        console.log('520',error);
     }
     
 }

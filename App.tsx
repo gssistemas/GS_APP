@@ -6,6 +6,7 @@ import Routes from './Routes/Index';
 import AuthThemeProvider from './assets/Styles/ThemeContext';
 import AuthLoginProvider from './assets/Contexts/AuthLogin';
 import { NavigationContainer } from '@react-navigation/native';
+import messaging from '@react-native-firebase/messaging';
 
 export default function App() {
     return (
