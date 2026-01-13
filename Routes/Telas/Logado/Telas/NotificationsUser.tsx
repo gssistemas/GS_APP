@@ -16,7 +16,7 @@ export default function NotificationsUser() {
     useEffect(()=>{
         
         buscarNotificacoes(usuario.id_login[0].id,usuario.id_login[0].id);
-        console.log(usuario);
+        //console.log(usuario);
         filterNotifications(value);
     },[])
 
@@ -31,7 +31,7 @@ export default function NotificationsUser() {
                 para:de,
             }
         });
-        console.log(retorno.data);
+        //console.log(retorno.data);
         if(retorno.data[0].status === 'OK'){
             buscarNotificacoes(usuario.id_login[0].id,usuario.id_login[0].id);
             filterNotifications(value);
@@ -96,7 +96,7 @@ export default function NotificationsUser() {
                         {
 
                             filteredNotifications.map((notify:any,i:number)=>{
-                                console.log(notify);
+                                //console.log(notify);
                                 return(
                                     <List.Accordion key={i} style={[{borderRadius:10,marginVertical:1,backgroundColor:'#FAFAFA'}]} title={notify.accordionTitle} id={notify.accordionKey} left={()=>{
                                         return(

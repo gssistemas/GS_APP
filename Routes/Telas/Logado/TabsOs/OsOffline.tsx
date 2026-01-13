@@ -69,6 +69,7 @@ export default function OsOffline() {
       const vrfConn = await verificarConexao();
 
       if(vrfConn.code === 0){
+        //console.log('Iniciando envio de O.S. offline')
         arlterarModal(
             'load',
             'archive-check',

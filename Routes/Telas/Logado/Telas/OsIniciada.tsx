@@ -22,6 +22,7 @@ export default function OsIniciada({route,navigation}:any) {
     const [error,setError] = useState<any>([]);
     const [asyncLoad,setAsyncLoad] = useState<boolean>(false);
     const hasFetched = useRef(false);
+    const [steps,setSteps] = useState(1);
 
     async function carregarNovamente(){
         setAsyncLoad(false);
@@ -84,7 +85,13 @@ export default function OsIniciada({route,navigation}:any) {
 
     useEffect(()=>{
         iniciar()
+        checked && setSteps(0);
+        checkedEmbalagem === true && checked === true ? setSteps(1) : setSteps(1);
+        checkedMontado == true && checkedEmbalagem == true ? setSteps(3) : setSteps(2);
+        checkedAmbiente === true && checkedMontado === true && conf[0].valor_config === '2' ? setSteps(4) : setSteps(2);
     },[]);
+
+    console.log('Configuracao=>',conf);
     //const lista = async ()=> await buscarOs('buscarOs',route.params.params.NumOs);
     async function iniciar(){
         carregarTodasImagens();
@@ -138,6 +145,27 @@ export default function OsIniciada({route,navigation}:any) {
             }
         }
         setDefaultConfig()
+    }
+
+    function fSteps(stepsIndex:number,countSteps:number){
+        console.log('index do step=>',stepsIndex)
+        switch (stepsIndex) {
+            case 0:
+                return(<Text style={[Styles.em_linhaHorizontal,Styles.btn,steps < 1 ? Styles.warning : Styles.success,steps < 1 ? Styles.lblwarning : Styles.lblsuccess,{justifyContent:'center',textAlign:'center'}]}>{`Configuração ${fSteps(stepsIndex,conf[0].valor_config)} de ${conf[0].valor_config} concluído(s)`}</Text>);
+                break;
+            case 1:
+                return(<Text style={[Styles.em_linhaHorizontal,Styles.btn,steps < 1 ? Styles.warning : Styles.success,steps < 1 ? Styles.lblwarning : Styles.lblsuccess,{justifyContent:'center',textAlign:'center'}]}>{`Configuração ${fSteps(stepsIndex,conf[0].valor_config)} de ${conf[0].valor_config} concluído(s)`}</Text>);
+                break;
+            case 2:
+                return(<Text style={[Styles.em_linhaHorizontal,Styles.btn,steps < 1 ? Styles.warning : Styles.success,steps < 1 ? Styles.lblwarning : Styles.lblsuccess,{justifyContent:'center',textAlign:'center'}]}>{`Configuração ${fSteps(stepsIndex,conf[0].valor_config)} de ${conf[0].valor_config} concluído(s)`}</Text>);
+                break;
+            case 3:
+                return(<Text style={[Styles.em_linhaHorizontal,Styles.btn,steps < 1 ? Styles.warning : Styles.success,steps < 1 ? Styles.lblwarning : Styles.lblsuccess,{justifyContent:'center',textAlign:'center'}]}>{`Configuração ${fSteps(stepsIndex,conf[0].valor_config)} de ${conf[0].valor_config} concluído(s)`}</Text>);
+                break;
+            case 3:
+                return(<Text style={[Styles.em_linhaHorizontal,Styles.btn,steps < 1 ? Styles.warning : Styles.success,steps < 1 ? Styles.lblwarning : Styles.lblsuccess,{justifyContent:'center',textAlign:'center'}]}>{`Configuração ${fSteps(stepsIndex,conf[0].valor_config)} de ${conf[0].valor_config} concluído(s)`}</Text>);
+                break;
+        }
     }
 
     function setDefaultConfig(){
@@ -470,8 +498,6 @@ export default function OsIniciada({route,navigation}:any) {
                                                 </View>
                                             }
                                         </View>
-                                        
-                                        
                                     }
                                 </View>
                             }
